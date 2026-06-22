@@ -10,39 +10,69 @@ app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
 });
 
-let players = {}; // لتخزين اللاعبين المتصلين
+// تخزين الغرف واللاعبين داخلها
+// الشكل سيكون: { 'room123': { players: { 'socketId': 'X' } } }
+let rooms = {}; 
 
 io.on('connection', (socket) => {
-    console.log('لاعب جديد دخل:', socket.id);
+    console.log('لاعب جديد متصل:', socket.id);
 
-    // تسجيل اللاعب وتحديد دوره (X أو O)
-    if (Object.keys(players).length < 2) {
-        const symbol = Object.keys(players).length === 0 ? 'X' : 'O';
-        players[socket.id] = symbol;
-        socket.emit('init', symbol); // إخبار اللاعب برمزه
-    } else {
-        socket.emit('full', 'اللعبة ممتلئة حالياً، يمكنك المشاهدة فقط.');
-    }
+    // الاستماع لحدث الانضمام لغرفة
+    socket.on('joinRoom', (roomName) => {
+        // إذا الغرفة مش موجودة، بننشئها
+        if (!rooms[roomName]) {
+            rooms[roomName] = { players: {} };
+        }
 
-    // الاستماع ل حركات اللاعبين وتمريرها للخصم
+        const currentPlayers = Object.keys(rooms[roomName].players);
+
+        // التحقق لو الغرفة مليانة
+        if (currentPlayers.length < 2) {
+            socket.join(roomName); // إدخال اللاعب للغرفة في Socket.io
+            socket.roomName = roomName; // حفظ اسم الغرفة في السوكت الخاص باللاعب
+
+            // تحديد الرمز (X للأول و O للثاني)
+            const symbol = currentPlayers.length === 0 ? 'X' : 'O';
+            rooms[roomName].players[socket.id] = symbol;
+
+            // إرسال الرمز للاعب
+            socket.emit('init', symbol);
+            console.log(`اللاعب ${socket.id} دخل الغرفة: ${roomName} كـ ${symbol}`);
+        } else {
+            socket.emit('full', 'هذه الغرفة ممتلئة حالياً!');
+        }
+    });
+
+    // تمرير الحركات داخل نفس الغرفة فقط باستخدام to(roomName)
     socket.on('playerMove', (data) => {
-        socket.broadcast.emit('enemyMove', data);
+        if (socket.roomName) {
+            socket.to(socket.roomName).emit('enemyMove', data);
+        }
     });
 
-    // إعادة تشغيل اللعبة
     socket.on('restartGame', () => {
-        io.emit('restart');
+        if (socket.roomName) {
+            io.to(socket.roomName).emit('restart');
+        }
     });
 
-    // عند خروج لاعب
+    // عند المغادرة
     socket.on('disconnect', () => {
-        console.log('لاعب خرج:', socket.id);
-        delete players[socket.id];
-        io.emit('playerLeft');
+        const roomName = socket.roomName;
+        if (roomName && rooms[roomName]) {
+            console.log('لاعب خرج من الغرفة:', roomName);
+            delete rooms[roomName].players[socket.id];
+            io.to(roomName).emit('playerLeft');
+            
+            // لو الغرفة فضيت تماماً احذفها من الذاكرة
+            if (Object.keys(rooms[roomName].players).length === 0) {
+                delete rooms[roomName];
+            }
+        }
     });
 });
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`السيرفر الأسطوري جاهز وشغال على البورت: ${PORT}`);
+    console.log(`السيرفر شغال وجاهز على البورت: ${PORT}`);
 });
