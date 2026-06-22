@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>X-O الأسطورية أونلاين</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --grid-color: #1e293b;
+            --x-color: #38bdf8;
+            --o-color: #f43f5e;
+            --text-color: #f8fafc;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 5px;
+            text-shadow: 0 0 10px var(--x-color);
+            animation: pulse 2s infinite alternate;
+        }
+
+        #status {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: #94a3b8;
+            font-weight: bold;
+        }
+
+        /* شبكة اللعبة - متجاوبة تماماً مع الهواتف */
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 12px;
+            width: 90vw;
+            max-width: 400px;
+            height: 90vw;
+            max-height: 400px;
+            background-color: var(--grid-color);
+            padding: 12px;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 15px rgba(56, 189, 248, 0.2);
+        }
+
+        .cell {
+            background-color: var(--bg-color);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+            box-shadow: inset 0 0 0 transparent;
+        }
+
+        .cell:hover {
+            background-color: #1e293b;
+            transform: scale(1.02);
+        }
+
+        .cell.X {
+            color: var(--x-color);
+            text-shadow: 0 0 15px var(--x-color);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .cell.O {
+            color: var(--o-color);
+            text-shadow: 0 0 15px var(--o-color);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        button {
+            margin-top: 25px;
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, var(--x-color), #2563eb);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(37, 99, 235, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(56, 189, 248, 0.6);
+        }
+
+        /* حركات الأنيميشن */
+        @keyframes popIn {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0% { text-shadow: 0 0 10px var(--x-color); }
+            100% { text-shadow: 0 0 25px var(--x-color), 0 0 10px var(--o-color); }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>تحدي X-O الأونلاين</h1>
+    <div id="status">جاري الاتصال بالسيرفر الأسطوري...</div>
+
+    <div class="board" id="board">
+        <div class="cell" data-index="0"></div>
+        <div class="cell" data-index="1"></div>
+        <div class="cell" data-index="2"></div>
+        <div class="cell" data-index="3"></div>
+        <div class="cell" data-index="4"></div>
+        <div class="cell" data-index="5"></div>
+        <div class="cell" data-index="6"></div>
+        <div class="cell" data-index="7"></div>
+        <div class="cell" data-index="8"></div>
+    </div>
+
+    <button id="restartBtn" style="display:none;">إعادة تحدي جديد</button>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        let mySymbol = null;
+        let isMyTurn = false;
+        let boardState = Array(9).fill("");
+        const cells = document.querySelectorAll('.cell');
+        const statusText = document.getElementById('status');
+        const restartBtn = document.getElementById('restartBtn');
+
+        // نظام توليد تأثيرات صوتية إلكترونية للعبة
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            if (type === 'click') {
+                osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.05);
+            } else if (type === 'win') {
+                osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.3);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+            } else if (type === 'lose') {
+                osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.4);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+            }
+        }
+
+        // استقبال الرمز عند الدخول (X أو O)
+        socket.on('init', (symbol) => {
+            mySymbol = symbol;
+            isMyTurn = (mySymbol === 'X'); // X هو اللي بيبدأ دايماً
+            statusText.innerText = `أنت لاعب: ${mySymbol} | ${isMyTurn ? "دورك الآن، العب برهابة!" : "انتظر حركة الخصم..."}`;
+        });
+
+        socket.on('full', (msg) => { statusText.innerText = msg; });
+
+        // عند نقر خلية بالشبكة
+        cells.forEach(cell => {
+            cell.addEventListener('click', () => {
+                const index = cell.getAttribute('data-index');
+                if (!isMyTurn || boardState[index] !== "" || checkWinner()) return;
+
+                playSound('click');
+                makeMove(index, mySymbol);
+                socket.emit('playerMove', { index, symbol: mySymbol });
+                isMyTurn = false;
+                statusText.innerText = "انتظر حركة الخصم...";
+                checkGameResult();
+            });
+        });
+
+        // استقبال حركة الخصم أونلاين
+        socket.on('enemyMove', (data) => {
+            playSound('click');
+            makeMove(data.index, data.symbol);
+            isMyTurn = true;
+            statusText.innerText = "دورك هسا، فرجيه مهاراتك!";
+            checkGameResult();
+        });
+
+        function makeMove(index, symbol) {
+            boardState[index] = symbol;
+            cells[index].innerText = symbol;
+            cells[index].classList.add(symbol);
+        }
+
+        function checkGameResult() {
+            const winner = checkWinner();
+            if (winner) {
+                if (winner === mySymbol) {
+                    statusText.innerText = "🎉 كفوووو! أنت الفائز الساحق!";
+                    playSound('win');
+                } else {
+                    statusText.innerText = "💥 حظاً أوفر، الخصم فاز هالمرة!";
+                    playSound('lose');
+                }
+                restartBtn.style.display = "block";
+            } else if (!boardState.includes("")) {
+                statusText.innerText = "🤝 تعادل أسطوري بين محترفين!";
+                restartBtn.style.display = "block";
+            }
+        }
+
+        function checkWinner() {
+            const winPatterns = [
+                [0,1,2], [3,4,5], [6,7,8],
+                [0,3,6], [1,4,7], [2,5,8],
+                [0,4,8], [2,4,6]
+            ];
+            for (let pattern of winPatterns) {
+                const [a, b, c] = pattern;
+                if (boardState[a] && boardState[a] === boardState[b] && boardState[a] === boardState[c]) {
+                    return boardState[a];
+                }
+            }
+            return null;
+        }
+
+        // التعامل مع إعادة التشغيل وخروج اللاعبين
+        restartBtn.addEventListener('click', () => { socket.emit('restartGame'); });
+        socket.on('restart', () => {
+            boardState = Array(9).fill("");
+            cells.forEach(cell => { cell.innerText = ""; cell.className = "cell"; });
+            isMyTurn = (mySymbol === 'X');
+            statusText.innerText = `تمت إعادة اللعبة! أنت: ${mySymbol} | ${isMyTurn ? "دورك" : "دور الخصم"}`;
+            restartBtn.style.display = "none";
+        });
+        socket.on('playerLeft', () => {
+            statusText.innerText = "الخصم غادر اللعبة جبناً! أعد تحميل الصفحة للعب مجدداً.";
+        });
+    </script>
+</body>
+</html>
