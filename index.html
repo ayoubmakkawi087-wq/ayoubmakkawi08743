@@ -3,574 +3,817 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تحدي X-O الأونلاين المطوّر</title>
+    <title>منصة X-O الاحترافية</title>
     <script src="/socket.io/socket.io.js"></script>
     <style>
-        /* تعريف متغيرات الألوان المريحة للعين */
         :root {
-            --bg-color: #f0f4f8;
-            --container-bg: #ffffff;
-            --text-color: #1e293b;
-            --primary: #3b82f6;
-            --primary-hover: #2563eb;
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --primary: #2563eb;
+            --primary-light: #dbeafe;
             --accent-x: #ef4444;
             --accent-o: #10b981;
-            --border-color: #cbd5e1;
-            --chat-bg: #f8fafc;
+            --border: #e2e8f0;
         }
-
         [data-theme="dark"] {
-            --bg-color: #0f172a;
-            --container-bg: #1e293b;
-            --text-color: #f8fafc;
+            --bg-color: #0b0f19;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
             --primary: #3b82f6;
-            --primary-hover: #2563eb;
+            --primary-light: #1e3a8a;
             --accent-x: #f87171;
             --accent-o: #34d399;
-            --border-color: #334155;
-            --chat-bg: #0f172a;
+            --border: #334155;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', system-ui, sans-serif;
             background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-content: center;
-            align-items: center;
+            color: var(--text-main);
+            margin: 0; padding: 0;
+            display: flex; justify-content: center; align-items: center;
             min-height: 100vh;
             transition: background-color 0.3s, color 0.3s;
         }
 
-        .card {
-            background-color: var(--container-bg);
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-            padding: 24px;
-            width: 90%;
-            max-width: 400px;
-            text-align: center;
+        /* حاوية اللعبة المتجاوبة بالكامل */
+        .app-container {
+            width: 100%;
+            max-width: 500px;
+            background-color: var(--card-bg);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
             position: relative;
-            transition: background-color 0.3s;
+            box-shadow: 0 0 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        @media (min-height: 700px) and (min-width: 550px) {
+            .app-container {
+                min-height: 85vh;
+                max-height: 90vh;
+                border-radius: 24px;
+            }
         }
 
-        /* شاشات اللعبة التبادلية */
-        .screen { display: none; }
-        .screen.active { display: block; }
+        /* شريط العملات العلوي والثابت في اللوبي والمجر */
+        .currency-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border);
+            background-color: var(--card-bg);
+        }
+        .currency-box {
+            display: flex;
+            gap: 15px;
+            font-weight: bold;
+            font-size: 15px;
+        }
+        .currency-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--bg-color);
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
 
-        h1 { font-size: 24px; margin-bottom: 20px; }
-        h2 { font-size: 18px; margin: 10px 0; }
+        /* الشاشات التبادلية */
+        .screen {
+            display: none;
+            flex: 1;
+            padding: 20px;
+            flex-direction: column;
+            overflow-y: auto;
+            box-sizing: border-box;
+        }
+        .screen.active { display: flex; }
 
-        input[type="text"] {
+        h1 { font-size: 22px; text-align: center; margin: 10px 0 20px; }
+        
+        input, select, textarea {
             width: 100%;
             padding: 12px;
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
-            background-color: var(--container-bg);
-            color: var(--text-color);
-            font-size: 16px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-size: 15px;
             box-sizing: border-box;
             margin-bottom: 15px;
-            text-align: center;
         }
 
         button {
             width: 100%;
-            padding: 12px;
-            background-color: var(--primary);
-            color: white;
+            padding: 14px;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            margin-bottom: 12px;
-            transition: background-color 0.2s, transform 0.1s;
+            background-color: var(--primary);
+            color: white;
+            transition: opacity 0.2s;
+            margin-bottom: 10px;
         }
-        button:hover { background-color: var(--primary-hover); }
-        button:active { transform: scale(0.98); }
+        button:hover { opacity: 0.9; }
+        .btn-sec { background-color: var(--text-muted); }
+        .btn-outline { background: transparent; border: 2px solid var(--border); color: var(--text-main); }
+        .btn-danger { background-color: var(--accent-x); }
 
-        .btn-secondary {
-            background-color: #64748b;
+        /* البروفايل وكروت الأصدقاء */
+        .profile-card {
+            background: var(--bg-color);
+            padding: 15px;
+            border-radius: 16px;
+            text-align: center;
+            margin-bottom: 20px;
         }
-        .btn-secondary:hover { background-color: #475569; }
-
-        .btn-danger {
-            background-color: #dc2626;
-        }
-        .btn-danger:hover { background-color: #b91c1c; }
-
-        /* لوحة التحكم العلوية (الإعدادات والوضع الليلي) */
-        .top-bar {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            right: 10px;
+        .avatar-view { font-size: 45px; margin-bottom: 5px; }
+        .history-dots {
             display: flex;
-            justify-content: space-between;
-            z-index: 10;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 10px;
         }
-        .icon-btn {
-            background: none;
-            border: none;
-            color: var(--text-color);
-            font-size: 20px;
-            cursor: pointer;
-            width: auto;
-            padding: 5px 10px;
-            margin: 0;
+        .dot {
+            padding: 2px 8px;
+            font-size: 11px;
+            border-radius: 6px;
+            color: white;
+            font-weight: bold;
         }
+        .dot.فوز { background-color: var(--accent-o); }
+        .dot.خسارة { background-color: var(--accent-x); }
+        .dot.تعادل { background-color: var(--text-muted); }
 
-        /* شبكة اللعب X-O */
+        /* شبكة اللعبة التنافسية المحسنة الهوية والأحجام */
         .game-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin: 20px 0;
+            gap: 12px;
+            width: 100%;
+            max-width: 340px;
+            margin: 20px auto;
         }
         .cell {
             aspect-ratio: 1;
             background-color: var(--bg-color);
-            border: 2px solid var(--border-color);
-            border-radius: 12px;
-            font-size: 36px;
-            font-weight: bold;
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            font-size: 42px;
+            font-weight: 200;
             display: flex;
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            transition: background-color 0.2s;
         }
-        .cell.X { color: var(--accent-x); }
-        .cell.O { color: var(--accent-o); }
+        .cell.X { color: var(--accent-x); font-weight: bold; }
+        .cell.O { color: var(--accent-o); font-weight: bold; }
 
-        /* الأسماء وحالة الدور */
-        .players-info {
+        .player-header {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 10px;
-            font-weight: bold;
+            align-items: center;
+            padding: 10px;
+            background: var(--primary-light);
+            border-radius: 12px;
             font-size: 14px;
         }
-        #status {
-            margin: 15px 0;
-            font-size: 16px;
-            font-weight: bold;
-        }
 
-        /* نافذة شاشة نهاية اللعبة المنبثقة */
-        .modal {
-            display: none;
+        /* أيقونة زر الشات الجانبي العائم والإشعار */
+        .chat-toggle-btn {
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.6);
-            border-radius: 16px;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            padding: 24px;
+            bottom: 80px; left: 20px;
+            width: 50px; height: 50px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white; font-size: 22px;
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 99;
+        }
+        .badge {
+            position: absolute; top: -2px; right: -2px;
+            background: red; width: 12px; height: 12px;
+            border-radius: 50%; display: none;
+        }
+
+        /* نافذة شاشة الشات المنسدلة من الجانب */
+        .chat-sidebar {
+            position: absolute;
+            top: 0; left: -100%; width: 100%; height: 100%;
+            background: var(--card-bg);
+            z-index: 100; transition: left 0.3s ease;
+            display: flex; flex-direction: column;
+        }
+        .chat-sidebar.open { left: 0; }
+        .chat-header {
+            padding: 15px; border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .chat-logs { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .chat-input-bar { display: flex; padding: 10px; border-top: 1px solid var(--border); }
+        .chat-input-bar input { margin: 0; border-radius: 12px 0 0 12px; }
+        .chat-input-bar button { width: auto; margin: 0; border-radius: 0 12px 12px 0; }
+
+        /* نافذة شاشة نهاية القيم المنبثقة والصلبة لمنع التعليق */
+        .game-over-modal {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.75); z-index: 200;
+            display: none; justify-content: center; align-items: center; padding: 20px;
             box-sizing: border-box;
-            z-index: 20;
         }
-        .modal.active { display: flex; }
-        .modal h2 { color: white; font-size: 24px; margin-bottom: 20px; }
-
-        /* نظام الشات المدمج داخل اللعبة */
-        .chat-container {
-            margin-top: 15px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            background-color: var(--chat-bg);
-            text-align: right;
-        }
-        .chat-messages {
-            height: 100px;
-            overflow-y: auto;
-            padding: 8px;
-            font-size: 13px;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        .chat-input-area {
-            display: flex;
-            border-top: 1px solid var(--border-color);
-        }
-        .chat-input-area input {
-            flex: 1;
-            border: none;
-            padding: 8px;
-            background: transparent;
-            color: var(--text-color);
-            font-size: 14px;
-        }
-        .chat-input-area button {
-            width: auto;
-            margin: 0;
-            border-radius: 0 0 8px 0;
-            padding: 8px 12px;
+        .game-over-modal.active { display: flex; }
+        .modal-content {
+            background: var(--card-bg); width: 100%; padding: 25px;
+            border-radius: 20px; text-align: center;
         }
 
-        /* نافذة الإعدادات */
-        .settings-panel {
-            display: none;
-            margin-top: 15px;
-            padding: 15px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            text-align: right;
+        /* المتجر والبحث القوائم */
+        .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .shop-item { border: 1px solid var(--border); padding: 12px; border-radius: 12px; text-align: center; background: var(--bg-color); }
+        .user-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px; border-bottom: 1px solid var(--border);
         }
-        .settings-panel.active { display: block; }
-        .setting-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
+
+        /* التبويبات السفلية للوبي */
+        .tabs { display: flex; border-top: 1px solid var(--border); background: var(--card-bg); }
+        .tab-item { flex: 1; padding: 15px; text-align: center; cursor: pointer; font-size: 14px; font-weight: bold; }
+        .tab-item.active { color: var(--primary); border-top: 3px solid var(--primary); }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <div class="top-bar">
-            <button class="icon-btn" id="themeBtn" title="تبديل الوضع">🌙</button>
-            <button class="icon-btn" id="settingsToggleBtn" title="الإعدادات">⚙️</button>
-        </div>
-
-        <div class="settings-panel" id="settingsPanel">
-            <h3>إعدادات اللعبة</h3>
-            <div class="setting-row">
-                <label>مستوى الصوت:</label>
-                <input type="range" id="volumeSlider" min="0" max="1" step="0.1" value="0.5">
+    <div class="app-container">
+        
+        <div class="currency-bar" id="topCurrencyBar" style="display:none;">
+            <div class="currency-box">
+                <div class="currency-item">💎 <span id="diamondCount">0</span></div>
+                <div class="currency-item">🪙 <span id="goldCount">0</span></div>
             </div>
-            <button class="btn-secondary" style="padding:5px; font-size:12px;" onclick="toggleSettings()">إغلاق</button>
-        </div>
-
-        <div class="screen" id="screenName">
-            <h1>أهلاً بك في التحدي الأسطوري</h1>
-            <p>الرجاء إدخال اسمك للبدء (الحد الأقصى 12 حرفاً):</p>
-            <input type="text" id="usernameInput" placeholder="اكتب اسمك هنا..." maxlength="12">
-            <button onclick="saveNameAndContinue()">حفظ المتابعة</button>
-        </div>
-
-        <div class="screen" id="screenMenu">
-            <h1>تحدي X-O الأونلاين</h1>
-            <p id="welcomeBackText"></p>
-            <button onclick="joinRandomGame()">⚔️ لعب عشوائي</button>
-            <button class="btn-secondary" onclick="showRoomOptions()">🏠 اللعب داخل روم</button>
-        </div>
-
-        <div class="screen" id="screenRoomMenu">
-            <h1>دخول الروم المخصص</h1>
-            <input type="text" id="roomCodeInput" placeholder="أدخل رقم أو اسم الروم">
-            <button onclick="joinCustomRoom()">دخول / إنشاء روم</button>
-            <button class="btn-secondary" onclick="showScreen('screenMenu')">العودة للقائمة الرئيسية</button>
-        </div>
-
-        <div class="screen" id="screenWaiting">
-            <h2 id="waitingMessage">جاري البحث عن خصم...</h2>
-            <div style="margin: 20px 0;">⏳</div>
-            <button class="btn-danger" onclick="leaveActiveGame()">إلغاء والعودة للقائمة</button>
-        </div>
-
-        <div class="screen" id="screenGame">
-            <div class="players-info">
-                <div>أنت: <span id="myInfo" style="color:var(--primary)">-</span></div>
-                <div>الخصم: <span id="opponentInfo" style="color:var(--accent-x)">-</span></div>
+            <div>
+                <button class="icon-btn" onclick="openGlobalSettings()" style="width:auto; background:none; color:var(--text-main); font-size:20px; padding:0; margin:0;">⚙️</button>
             </div>
+        </div>
+
+        <div class="screen" id="scrRegister">
+            <h1>إنشاء ملف حساب أسطوري</h1>
+            <label>اختر الرمز أو الأفتار المفضل:</label>
+            <select id="regAvatar">
+                <option value="🥷">🥷 نينجا</option>
+                <option value="🦁">🦁 أسد</option>
+                <option value="👑">👑 ملك</option>
+                <option value="🎮">🎮 قيمر</option>
+                <option value="💎">💎 ماسة</option>
+            </select>
+            <label>اسم اللاعب (الحد الأقصى 12 حرف):</label>
+            <input type="text" id="regName" placeholder="اكتب اسمك هنا..." maxlength="12">
+            <label>اكتب وصفاً قصيراً لبروفايلك:</label>
+            <textarea id="regBio" placeholder="أنا المحترف القادم..." rows="2" maxlength="40"></textarea>
+            <button onclick="submitRegistration()">ابدأ المغامرة والعب أونلاين</button>
+        </div>
+
+        <div class="screen" id="scrMenu">
+            <div class="profile-card">
+                <div class="avatar-view" id="profAvatar">🥷</div>
+                <h2 id="profName" style="margin:2px 0;">-</h2>
+                <p id="profBio" style="font-size:13px; color:var(--text-muted); margin:4px 0;">-</p>
+                <div class="history-dots" id="profHistory"></div>
+                <button class="btn-outline" style="padding:4px; font-size:12px; width:auto; margin-top:10px;" onclick="triggerNameChangeShop()">تغيير الاسم يدوياً</button>
+            </div>
+            <button onclick="startRandomMatch()">⚔️ لعب عشوائي ضد محترف</button>
+            <button class="btn-sec" onclick="showScreen('scrCustomRoom')">🏠 إنشاء أو دخول روم مخصص</button>
+        </div>
+
+        <div class="screen" id="scrCustomRoom">
+            <h1>لعب داخل روم مخصص</h1>
+            <input type="text" id="customRoomCode" placeholder="أدخل رقم أو رمز الروم هنا...">
+            <button onclick="joinCustomRoomCode()">دخول / إنشاء الروم</button>
+            <button class="btn-sec" onclick="goBackToLobby()">العودة للخلف</button>
+        </div>
+
+        <div class="screen" id="scrFriends">
+            <h2>قائمة الأصدقاء (<span id="friendCounter">0</span>/50)</h2>
+            <div id="friendsListArea" style="flex:1; overflow-y:auto; min-height:100px; margin-bottom:15px;"></div>
             
-            <div id="status">انتظر حركتك...</div>
+            <h2>البحث عن لاعبين وإضافتهم</h2>
+            <button class="btn-outline" onclick="refreshSearchUsers()">🔄 تحديث قائمة البحث</button>
+            <div id="searchUsersArea" style="flex:1; overflow-y:auto;"></div>
+        </div>
 
-            <div class="game-grid" id="board">
-                <div class="cell" onclick="cellClicked(0)"></div>
-                <div class="cell" onclick="cellClicked(1)"></div>
-                <div class="cell" onclick="cellClicked(2)"></div>
-                <div class="cell" onclick="cellClicked(3)"></div>
-                <div class="cell" onclick="cellClicked(4)"></div>
-                <div class="cell" onclick="cellClicked(5)"></div>
-                <div class="cell" onclick="cellClicked(6)"></div>
-                <div class="cell" onclick="cellClicked(7)"></div>
-                <div class="cell" onclick="cellClicked(8)"></div>
-            </div>
-
-            <button class="btn-danger" onclick="leaveActiveGame()">🚪 خروج من الروم</button>
-
-            <div class="chat-container">
-                <div class="chat-messages" id="chatMessages"></div>
-                <div class="chat-input-area">
-                    <input type="text" id="chatInput" placeholder="اكتب رسالة سريعة للخصم...">
-                    <button onclick="sendChatMessage()">إرسال</button>
+        <div class="screen" id="scrShop">
+            <h1>متجر المزايا والعملات</h1>
+            <div class="shop-grid">
+                <div class="shop-item"><span style="color:var(--text-muted); font-size:12px;">خانات فارغة للمستقبل</span></div>
+                <div class="shop-item"><span style="color:var(--text-muted); font-size:12px;">خانات فارغة للمستقبل</span></div>
+                <div class="shop-item"><span style="color:var(--text-muted); font-size:12px;">خانات فارغة للمستقبل</span></div>
+                
+                <div class="shop-item" style="border:2px solid var(--primary)">
+                    <h3>حزم الألماس 💎</h3>
+                    <button style="font-size:11px; padding:6px;" onclick="buyDiamondsSimulate(100, 1)">100 💎 بـ 1$</button>
+                    <button style="font-size:11px; padding:6px;" onclick="buyDiamondsSimulate(1000, 10)">1000 💎 بـ 10$</button>
+                    <button style="font-size:11px; padding:6px;" onclick="buyDiamondsSimulate(3000, 30)">3000 💎 بـ 30$</button>
+                </div>
+                <div class="shop-item" style="border:2px solid var(--accent-o)">
+                    <h3>شراء الذهب 🪙</h3>
+                    <button style="font-size:11px; padding:6px;" onclick="convertDiamondsToGold(1, 50)">50 🪙 بـ 1💎</button>
+                    <button style="font-size:11px; padding:6px;" onclick="convertDiamondsToGold(10, 500)">500 🪙 بـ 10💎</button>
+                    <button style="font-size:11px; padding:6px;" onclick="convertDiamondsToGold(100, 5000)">5000 🪙 بـ 100💎</button>
                 </div>
             </div>
         </div>
 
-        <div class="modal" id="endGameModal">
-            <h2 id="modalResultText">لقد فزت! 🎉</h2>
-            <button onclick="requestRestart()">🔄 اللعب مرة أخرى</button>
-            <button class="btn-secondary" onclick="closeModalAndGoHome()">🏠 الصفحة الرئيسية</button>
+        <div class="screen" id="scrGame">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <div class="player-header" style="border-right:4px solid var(--accent-x)">
+                    <span id="p1Name">-</span> <span id="p1Symbol">(X)</span>
+                </div>
+                <div style="font-weight:bold; font-size:18px; color:var(--primary)" id="matchTimer">02:00</div>
+                <div class="player-header" style="border-left:4px solid var(--accent-o)">
+                    <span id="p2Name">-</span> <span id="p2Symbol">(O)</span>
+                </div>
+            </div>
+
+            <div id="gameTurnStatus" style="text-align:center; font-weight:bold; margin:10px 0;">جاري بدء الجولة...</div>
+
+            <div class="game-grid">
+                <div class="cell" id="c0" onclick="sendCellClick(0)"></div>
+                <div class="cell" id="c1" onclick="sendCellClick(1)"></div>
+                <div class="cell" id="c2" onclick="sendCellClick(2)"></div>
+                <div class="cell" id="c3" onclick="sendCellClick(3)"></div>
+                <div class="cell" id="c4" onclick="sendCellClick(4)"></div>
+                <div class="cell" id="c5" onclick="sendCellClick(5)"></div>
+                <div class="cell" id="c6" onclick="sendCellClick(6)"></div>
+                <div class="cell" id="c7" onclick="sendCellClick(7)"></div>
+                <div class="cell" id="c8" onclick="sendCellClick(8)"></div>
+            </div>
+
+            <button class="btn-danger" style="margin-top:20px;" onclick="exitGameToLobby()">🚪 انسحاب ومغادرة القيم</button>
+        </div>
+
+        <div class="screen" id="scrWaiting">
+            <h2 id="waitText" style="text-align:center; margin-top:50px;">جاري الاتصال...</h2>
+            <button class="btn-danger" style="margin-top:20px;" onclick="exitGameToLobby()">إلغاء والعودة</button>
+        </div>
+
+        <div class="tabs" id="lobbyTabs" style="display:none;">
+            <div class="tab-item active" id="tabMenu" onclick="switchLobbyTab('scrMenu')">⚔️ ساحة اللعب</div>
+            <div class="tab-item" id="tabFriends" onclick="switchLobbyTab('scrFriends')">👥 الأصدقاء</div>
+            <div class="tab-item" id="tabShop" onclick="switchLobbyTab('scrShop')">🛒 المتجر</div>
+        </div>
+
+        <div class="chat-toggle-btn" id="chatToggleBtn" style="display:none;" onclick="openChatSidebar()">
+            💬
+            <div class="badge" id="chatBadge"></div>
+        </div>
+
+        <div class="chat-sidebar" id="chatSidebar">
+            <div class="chat-header">
+                <h3>شات التحدي المباشر</h3>
+                <button class="btn-sec" style="width:auto; padding:5px 10px; margin:0;" onclick="closeChatSidebar()">إغلاق</button>
+            </div>
+            <div class="chat-logs" id="chatLogs"></div>
+            <div class="chat-input-bar">
+                <input type="text" id="chatInputField" placeholder="اكتب رسالة سريعة...">
+                <button onclick="sendLiveMessage()">إرسال</button>
+            </div>
+        </div>
+
+        <div class="game-over-modal" id="gameOverModal">
+            <div class="modal-content">
+                <h1 id="gameOverTitle" style="font-size:26px;">انتهى القيم</h1>
+                <p id="gameOverBody" style="font-size:16px; margin-bottom:25px;">-</p>
+                <button onclick="triggerRematchRequest()">🔄 العب مرة أخرى</button>
+                <button class="btn-sec" onclick="closeModalCompletelyAndGoLobby()">🏠 العودة للقائمة الرئيسية</button>
+            </div>
+        </div>
+
+        <div class="game-over-modal" id="settingsModal">
+            <div class="modal-content" style="text-align:right;">
+                <h2>إعدادات المنصة العامة</h2>
+                <hr style="border-color:var(--border)">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin:15px 0;">
+                    <label>الوضع المريح للعين:</label>
+                    <button class="btn-outline" id="themeToggleBtn" style="width:auto; margin:0;" onclick="switchThemeMode()">🌙 ليلى</button>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin:15px 0;">
+                    <label>مستوى التحكم بالصوت:</label>
+                    <input type="range" id="volSlider" min="0" max="1" step="0.1" value="0.5" style="width:60%; margin:0;">
+                </div>
+                <button class="btn-sec" style="margin-top:15px;" onclick="closeGlobalSettings()">إغلاق وحفظ</button>
+            </div>
         </div>
 
     </div>
 
     <script>
-        const socket = io();
-        let myName = "";
-        let currentRoom = "";
-        let mySymbol = "";
-        let isMyTurn = false;
-        let volume = 0.5;
+        let myAccount = { name: "", avatar: "🥷", bio: "", gold: 1000, diamonds: 0, nameChanges: 0, friends: [], history: [] };
+        let activeRoomId = "";
+        let currentSymbol = "";
+        let myTurnActive = false;
+        let isChatOpen = false;
+        let globalVolumeSetting = 0.5;
 
-        // إعداد الأصوات السينثسايزر المريحة للأذن
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playTone(freq, type, duration) {
-            if (volume === 0) return;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
+        // تأثيرات أصوات سينثسايزر ويب المريحة والخفيفة جداً
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        function playCleanTone(frequency, duration, type = 'sine') {
+            if (globalVolumeSetting === 0) return;
+            let osc = audioContext.createOscillator();
+            let gainNode = audioContext.createGain();
             osc.type = type;
-            osc.frequency.value = freq;
-            gain.gain.setValueAtTime(volume * 0.3, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + duration);
+            osc.frequency.value = frequency;
+            gainNode.gain.setValueAtTime(globalVolumeSetting * 0.2, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + duration);
+            osc.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            osc.start(); osc.stop(audioContext.currentTime + duration);
         }
 
-        function playClickSound() { playTone(523.25, 'sine', 0.1); } // نغمة كليك هادئة ومريحة C5
-        function playWinSound() { playTone(587.33, 'sine', 0.15); setTimeout(() => playTone(880, 'sine', 0.3), 120); } // نغمة فوز مبهجة وهادئة
-        function playLoseSound() { playTone(349.23, 'sine', 0.2); setTimeout(() => playTone(220, 'sine', 0.4), 180); } // نغمة خسارة خفيفة
+        function runSoundClick() { playCleanTone(550, 0.08); }
+        function runSoundWin() { playCleanTone(523, 0.12); setTimeout(() => playCleanTone(659, 0.15), 100); setTimeout(() => playCleanTone(783, 0.25), 200); }
+        function runSoundLose() { playCleanTone(380, 0.15); setTimeout(() => playCleanTone(240, 0.3), 150); }
+        function runSoundChatAlert() { playCleanTone(880, 0.05); setTimeout(() => playCleanTone(880, 0.05), 70); }
 
-        // نظام الحفظ والتحميل التلقائي للاسم والوضع المفضّل عند الفتح لأول مرة
-        window.onload = function() {
-            const savedName = localStorage.getItem('xo_player_name');
-            const savedTheme = localStorage.getItem('xo_theme') || 'light';
+        window.onload = () => {
+            // تحميل البيانات المحفوظة محلياً في ذاكرة الجهاز
+            let localData = localStorage.getItem('xo_platform_account');
+            let localTheme = localStorage.getItem('xo_platform_theme') || 'light';
             
-            document.documentElement.setAttribute('data-theme', savedTheme);
-            document.getElementById('themeBtn').innerText = savedTheme === 'dark' ? '☀️' : '🌙';
+            document.documentElement.setAttribute('data-theme', localTheme);
+            document.getElementById('themeToggleBtn').innerText = localTheme === 'dark' ? '☀️ نهاري' : '🌙 ليلي';
 
-            if (savedName) {
-                myName = savedName;
-                socket.emit('setPlayerName', myName);
-                document.getElementById('welcomeBackText').innerText = `مرحباً بك مجدداً يا ${myName}!`;
-                showScreen('screenMenu');
+            if (localData) {
+                myAccount = JSON.parse(localData);
+                socket.emit('registerUser', myAccount);
+                showLobbyDashboard();
             } else {
-                showScreen('screenName');
+                showScreen('scrRegister');
             }
         };
 
-        // التبديل بين الشاشات بسلاسة
         function showScreen(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
-        }
-
-        function toggleSettings() {
-            document.getElementById('settingsPanel').classList.toggle('active');
-        }
-
-        // حفظ الاسم والمتابعة للرئيسية
-        function saveNameAndContinue() {
-            const input = document.getElementById('usernameInput').value.trim();
-            if(!input) return alert("الرجاء كتابة اسمك أولاً!");
-            if(input.length > 12) return alert("الاسم طويل جداً! الحد الأقصى 12 حرفاً.");
             
-            myName = input;
-            localStorage.setItem('xo_player_name', myName);
-            socket.emit('setPlayerName', myName);
-            document.getElementById('welcomeBackText').innerText = `مرحباً بك يا ${myName}!`;
-            showScreen('screenMenu');
+            // إخفاء أو إظهار بار العملات والتبويبات
+            if (id === 'scrMenu' || id === 'scrFriends' || id === 'scrShop' || id === 'scrCustomRoom') {
+                document.getElementById('topCurrencyBar').style.display = 'flex';
+                document.getElementById('lobbyTabs').style.display = 'flex';
+            } else {
+                document.getElementById('topCurrencyBar').style.display = 'none';
+                document.getElementById('lobbyTabs').style.display = 'none';
+            }
+            // إخفاء الشات عند الخروج من اللعب
+            if (id !== 'scrGame') {
+                document.getElementById('chatToggleBtn').style.display = 'none';
+                closeChatSidebar();
+            }
         }
 
-        // تفعيل أزرار القائمة الرئيسية للغرفة والعشوائي
-        function joinRandomGame() {
-            playClickSound();
-            socket.emit('joinRandom');
+        function switchLobbyTab(tabId) {
+            runSoundClick();
+            document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+            if (tabId === 'scrMenu') document.getElementById('tabMenu').classList.add('active');
+            if (tabId === 'scrFriends') { document.getElementById('tabFriends').classList.add('active'); socket.emit('searchUsers'); }
+            if (tabId === 'scrShop') document.getElementById('tabShop').classList.add('active');
+            showScreen(tabId);
         }
 
-        function showRoomOptions() {
-            playClickSound();
-            showScreen('screenRoomMenu');
+        function submitRegistration() {
+            let name = document.getElementById('regName').value.trim();
+            if (!name) return alert("الرجاء كتابة الاسم للبدء!");
+            if (name.length > 12) return alert("الاسم طويل جداً، حدد 12 حرف فقط.");
+
+            myAccount.name = name;
+            myAccount.avatar = document.getElementById('regAvatar').value;
+            myAccount.bio = document.getElementById('regBio').value.trim() || "لاعب أسطوري محب للمنافسة!";
+            myAccount.gold = 1000; // إعطاء 1000 ذهب مجاني عند الدخول لأول مرة
+            myAccount.diamonds = 0;
+            myAccount.nameChanges = 0;
+            myAccount.friends = [];
+            myAccount.history = [];
+
+            localStorage.setItem('xo_platform_account', JSON.stringify(myAccount));
+            socket.emit('registerUser', myAccount);
+            showLobbyDashboard();
         }
 
-        function joinCustomRoom() {
-            playClickSound();
-            const code = document.getElementById('roomCodeInput').value.trim();
-            if(!code) return alert("الرجاء إدخال رقم أو كود الروم!");
+        socket.on('updateProfile', (updatedData) => {
+            myAccount = updatedData;
+            localStorage.setItem('xo_platform_account', JSON.stringify(myAccount));
+            
+            // تحديث واجهة كرت البروفايل العلوي
+            document.getElementById('diamondCount').innerText = myAccount.diamonds;
+            document.getElementById('goldCount').innerText = myAccount.gold;
+            document.getElementById('profName').innerText = myAccount.name;
+            document.getElementById('profAvatar').innerText = myAccount.avatar;
+            document.getElementById('profBio').innerText = myAccount.bio;
+            document.getElementById('friendCounter').innerText = myAccount.friends.length;
+
+            // طباعة سجل آخر 3 مباريات فوز أو خسارة أو تعادل
+            let histArea = document.getElementById('profHistory');
+            histArea.innerHTML = "";
+            myAccount.history.forEach(h => {
+                let dot = document.createElement('span');
+                dot.className = `dot ${h}`;
+                dot.innerText = h;
+                histArea.appendChild(dot);
+            });
+        });
+
+        function showLobbyDashboard() {
+            switchLobbyTab('scrMenu');
+        }
+
+        function goBackToLobby() {
+            runSoundClick();
+            showLobbyDashboard();
+        }
+
+        // إطلاق اللعب والمنافسة
+        function startRandomMatch() { runSoundClick(); socket.emit('joinRandom'); }
+        function joinCustomRoomCode() {
+            runSoundClick();
+            let code = document.getElementById('customRoomCode').value.trim();
+            if (!code) return alert("الرجاء إدخال رمز الروم!");
             socket.emit('joinRoom', code);
         }
 
-        // أحداث وقراءة أوامر السيرفر (Socket events)
         socket.on('waiting', (msg) => {
-            document.getElementById('waitingMessage').innerText = msg;
-            showScreen('screenWaiting');
-        });
-
-        socket.on('roomFull', (msg) => {
-            alert(msg);
+            document.getElementById('waitText').innerText = msg;
+            showScreen('scrWaiting');
         });
 
         socket.on('gameStart', (data) => {
-            currentRoom = data.room;
-            mySymbol = data.symbol;
-            isMyTurn = (mySymbol === 'X');
+            activeRoomId = data.room;
+            currentSymbol = data.symbol;
+            myTurnActive = (currentSymbol === 'X');
 
-            document.getElementById('myInfo').innerText = `${myName} (${mySymbol})`;
-            document.getElementById('opponentInfo').innerText = data.opponentName;
+            // ترتيب عرض الأسماء بدقة: اللاعب الحالي أولاً والخصم ثانياً
+            document.getElementById('p1Name').innerText = myAccount.name;
+            document.getElementById('p1Symbol').innerText = `(${currentSymbol})`;
+            document.getElementById('p2Name').innerText = data.opponent.name;
+            document.getElementById('p2Symbol').innerText = `(${currentSymbol === 'X' ? 'O' : 'X'})`;
+
+            clearGridVisuals();
+            updateTurnText();
             
-            updateStatusText();
-            resetVisualBoard();
-            
-            // تنظيف شات الجيم السابق
-            document.getElementById('chatMessages').innerHTML = "";
-            
-            showScreen('screenGame');
+            document.getElementById('chatLogs').innerHTML = "";
+            document.getElementById('chatToggleBtn').style.display = 'flex';
+            document.getElementById('chatBadge').style.display = 'none';
+
+            showScreen('scrGame');
         });
 
-        function cellClicked(index) {
-            if (!isMyTurn) return;
-            const cells = document.querySelectorAll('.cell');
-            if (cells[index].innerText !== "") return;
+        function sendCellClick(idx) {
+            if (!myTurnActive) return;
+            let cell = document.getElementById(`c${idx}`);
+            if (cell.innerText !== "") return;
 
-            playClickSound();
-            socket.emit('makeMove', { room: currentRoom, index: index, symbol: mySymbol });
+            runSoundClick();
+            socket.emit('makeMove', { room: activeRoomId, index: idx, symbol: currentSymbol });
         }
 
         socket.on('moveMade', (data) => {
-            const cells = document.querySelectorAll('.cell');
-            cells[data.index].innerText = data.symbol;
-            cells[data.index].classList.add(data.symbol);
+            let cell = document.getElementById(`c${data.index}`);
+            cell.innerText = data.symbol;
+            cell.className = `cell ${data.symbol}`;
 
-            isMyTurn = (data.nextTurnSymbol === mySymbol);
-            updateStatusText();
-            checkGameState();
+            myTurnActive = (data.nextTurnSymbol === currentSymbol);
+            updateTurnText();
+            evaluateGridLocally();
         });
 
-        function updateStatusText() {
-            const statusText = document.getElementById('status');
-            statusText.innerText = isMyTurn ? "دورك الآن، العب حركتك الفخمة!" : "انتظر حركة الخصم...";
+        function updateTurnText() {
+            document.getElementById('gameTurnStatus').innerText = myTurnActive ? "دورك الآن، العب بذكاء! 🤔" : "انتظر حركة الخصم... ⏳";
         }
 
-        function resetVisualBoard() {
-            const cells = document.querySelectorAll('.cell');
-            cells.forEach(cell => {
+        function clearGridVisuals() {
+            for (let i = 0; i < 9; i++) {
+                let cell = document.getElementById(`c${i}`);
                 cell.innerText = "";
                 cell.className = "cell";
-            });
+            }
         }
 
-        // فحص الفوز والخسارة محلياً وفورياً للاعبين
-        function checkGameState() {
-            const cells = document.querySelectorAll('.cell');
-            const b = Array.from(cells).map(c => c.innerText);
+        // فحص حالة الجيم محلياً لحساب المكافآت وحفظ النتائج فوراً ومنع التعليق
+        function evaluateGridLocally() {
+            let cells = [];
+            for (let i = 0; i < 9; i++) cells.push(document.getElementById(`c${i}`).innerText);
 
-            const winPatterns = [
-                [0,1,2], [3,4,5], [6,7,8],
-                [0,3,6], [1,4,7], [2,5,8],
-                [0,4,8], [2,4,6]
-            ];
+            const patterns = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+            let winSymbol = null;
 
-            let winner = null;
-            for (let p of winPatterns) {
-                if (b[p[0]] && b[p[0]] === b[p[1]] && b[p[0]] === b[p[2]]) {
-                    winner = b[p[0]];
+            for (let p of patterns) {
+                if (cells[p[0]] && cells[p[0]] === cells[p[1]] && cells[p[0]] === cells[p[2]]) {
+                    winSymbol = cells[p[0]];
                     break;
                 }
             }
 
-            if (winner) {
-                if (winner === mySymbol) {
-                    playWinSound();
-                    showEndGameModal("لقد انتصرت بجدارة أسطورية! 🎉");
-                } else {
-                    playLoseSound();
-                    showEndGameModal("حظاً أوفر، فاز الخصم هذه الجولة! 💔");
-                }
-                isMyTurn = false;
-            } else if (!b.includes("")) {
-                playClickSound();
-                showEndGameModal("تعادل قوي بين الطرفين! 🤝");
-                isMyTurn = false;
+            if (winSymbol) {
+                let res = (winSymbol === currentSymbol) ? "فوز" : "خسارة";
+                if (res === "فوز") { runSoundWin(); openGameOverModal("🎉 انتصار ساحق!", "كفو! فزت بالجولة وحصلت على 100 عملة ذهبية مجانية!"); }
+                else { runSoundLose(); openGameOverModal("💔 خسارة!", "حظاً أوفر في المرة القادمة، الخصم انتصر عليك!"); }
+                socket.emit('gameEndResult', { room: activeRoomId, result: res });
+                myTurnActive = false;
+            } else if (!cells.includes("")) {
+                runSoundClick();
+                openGameOverModal("🤝 تعادل قوي!", "جيم متكافئ بين المحترفين، انتهت الجولة بالتعادل!");
+                socket.emit('gameEndResult', { room: activeRoomId, result: "تعادل" });
+                myTurnActive = false;
             }
         }
 
-        function showEndGameModal(text) {
-            document.getElementById('modalResultText').innerText = text;
-            document.getElementById('endGameModal').classList.add('active');
+        function openGameOverModal(title, body) {
+            document.getElementById('gameOverTitle').innerText = title;
+            document.getElementById('gameOverBody').innerText = body;
+            document.getElementById('gameOverModal').classList.add('active');
         }
 
-        function requestRestart() {
-            playClickSound();
-            document.getElementById('endGameModal').classList.remove('active');
-            socket.emit('restartGame', currentRoom);
+        function closeModalCompletelyAndGoLobby() {
+            runSoundClick();
+            document.getElementById('gameOverModal').classList.remove('active');
+            exitGameToLobby();
+        }
+
+        function triggerRematchRequest() {
+            runSoundClick();
+            document.getElementById('gameOverModal').classList.remove('active');
+            socket.emit('restartGame', activeRoomId);
         }
 
         socket.on('restart', () => {
-            resetVisualBoard();
-            isMyTurn = (mySymbol === 'X');
-            updateStatusText();
+            clearGridVisuals();
+            myTurnActive = (currentSymbol === 'X');
+            updateTurnText();
+            document.getElementById('gameOverModal').classList.remove('active');
         });
 
-        function closeModalAndGoHome() {
-            playClickSound();
-            document.getElementById('endGameModal').classList.remove('remove');
-            leaveActiveGame();
-        }
+        // تحديث وعرض عداد دقيقتين للقيم بالثواني
+        socket.on('timerUpdate', (secondsLeft) => {
+            let mins = Math.floor(secondsLeft / 60);
+            let secs = secondsLeft % 60;
+            document.getElementById('matchTimer').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        });
 
-        function leaveActiveGame() {
-            playClickSound();
-            document.getElementById('endGameModal').classList.remove('active');
+        socket.on('timeOutEnd', () => {
+            runSoundLose();
+            openGameOverModal("⏱️ انتهى وقت الجيم!", "انقضت دقيقتان كاملتان دون حسم، نراكم في قيم آخر!");
+            myTurnActive = false;
+        });
+
+        socket.on('opponentDisconnected', () => {
+            alert("غادر الخصم أو انقطع اتصاله! سيتم توجيهك للوبي.");
+            document.getElementById('gameOverModal').classList.remove('active');
+            exitGameToLobby();
+        });
+
+        function exitGameToLobby() {
             socket.emit('leaveRoom');
-            showScreen('screenMenu');
+            showLobbyDashboard();
         }
 
-        socket.on('playerLeft', () => {
-            alert("غادر الخصم اللعبة! سنعود بك للقائمة الرئيسية.");
-            showScreen('screenMenu');
-        });
-
-        // تشغيل وإرسال شات اللعبة المباشر
-        function sendChatMessage() {
-            const input = document.getElementById('chatInput');
-            const msg = input.value.trim();
-            if(!msg) return;
-
-            socket.emit('sendChatMessage', { room: currentRoom, message: msg });
-            input.value = "";
+        // نظام الشات الجانبي المتطور مع الإشعارات الصوتية والوميض
+        function openChatSidebar() {
+            isChatOpen = true;
+            document.getElementById('chatSidebar').classList.add('open');
+            document.getElementById('chatBadge').style.display = 'none';
         }
+        function closeChatSidebar() {
+            isChatOpen = false;
+            document.getElementById('chatSidebar').classList.remove('open');
+        }
+        function sendLiveMessage() {
+            let field = document.getElementById('chatInputField');
+            let txt = field.value.trim();
+            if(!txt) return;
 
+            socket.emit('sendChatMessage', { room: activeRoomId, message: txt });
+            let logs = document.getElementById('chatLogs');
+            logs.innerHTML += `<div><strong>أنت:</strong> ${txt}</div>`;
+            logs.scrollTop = logs.scrollHeight;
+            field.value = "";
+        }
         socket.on('receiveChatMessage', (data) => {
-            const chatBox = document.getElementById('chatMessages');
-            const msgElement = document.createElement('div');
-            msgElement.innerHTML = `<strong>${data.sender}:</strong> ${data.message}`;
-            chatBox.appendChild(msgElement);
-            chatBox.scrollTop = chatBox.scrollHeight;
+            let logs = document.getElementById('chatLogs');
+            logs.innerHTML += `<div><strong>${data.sender}:</strong> ${data.message}</div>`;
+            logs.scrollTop = logs.scrollHeight;
+            
+            if (!isChatOpen) {
+                runSoundChatAlert(); // إرسال صوت إشعار عند وصول رسالة جديدة والشات مغلق
+                document.getElementById('chatBadge').style.display = 'block'; // وميض الإشعار الأحمر
+            }
         });
 
-        // كود تشغيل إرسال شات بالضغط على زر Enter بالماوس
-        document.getElementById('chatInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') sendChatMessage();
+        // أنظمة البحث، الصداقة، والتحكم بالحد الأقصى 50
+        function refreshSearchUsers() {
+            runSoundClick();
+            socket.emit('searchUsers');
+        }
+
+        socket.on('userListUpdate', (usersArray) => {
+            let area = document.getElementById('searchUsersArea');
+            area.innerHTML = "";
+            usersArray.forEach(u => {
+                if (u.id === socket.id) return;
+                let row = document.createElement('div');
+                row.className = "user-row";
+                row.innerHTML = `
+                    <div>${u.avatar} <strong>${u.name}</strong><br><small style="color:var(--text-muted)">${u.bio}</small></div>
+                    <button style="width:auto; font-size:11px; padding:6px 12px; margin:0;" onclick="sendFriendRequestToServer('${u.id}')">➕ إضافة</button>
+                `;
+                area.appendChild(row);
+            });
         });
 
-        // أزرار التحكم بالصوت والوضع الليلي/النهاري المريح للعين
-        document.getElementById('themeBtn').addEventListener('click', () => {
+        function sendFriendRequestToServer(id) {
+            runSoundClick();
+            socket.emit('sendFriendRequest', id);
+        }
+
+        socket.on('receiveFriendRequest', (data) => {
+            let acc = confirm(`وصلك طلب صداقة من اللاعب: ${data.fromName}. هل تود قبوله؟`);
+            if (acc) {
+                socket.emit('acceptFriend', data.fromId);
+            }
+        });
+
+        socket.on('notification', (data) => {
+            alert(data.message);
+        });
+
+        // عرض قائمة الأصدقاء الحاليين المضافين لديك
+        socket.on('updateProfile', (data) => {
+            let fArea = document.getElementById('friendsListArea');
+            fArea.innerHTML = "";
+            if (data.friends.length === 0) fArea.innerHTML = "<div style='color:var(--text-muted); font-size:13px;'>لا يوجد أصدقاء مضافين حالياً.</div>";
+            data.friends.forEach(f => {
+                let row = document.createElement('div');
+                row.className = "user-row";
+                row.innerHTML = `<div>${f.avatar || '👤'} <strong>${f.name}</strong></div><span style='color:green; font-size:12px;'>✓ صديق</span>`;
+                fArea.appendChild(row);
+            });
+        });
+
+        // متجر العملات والذهب والألماس المحاكي بالكامل وتغيير الأسماء
+        function buyDiamondsSimulate(amount, dollars) {
+            runSoundWin();
+            myAccount.diamonds += amount;
+            alert(`شكراً لك! تمت محاكاة عملية الشراء بنجاح بقيمة ${dollars}$ وحصلت على ${amount} ماسة 💎`);
+            socket.emit('registerUser', myAccount);
+        }
+
+        function convertDiamondsToGold(diamondsCost, goldReward) {
+            if (myAccount.diamonds < diamondsCost) return alert("ليس لديك ألماس كافي لإتمام هذه الصفقة!");
+            runSoundClick();
+            myAccount.diamonds -= diamondsCost;
+            myAccount.gold += goldReward;
+            socket.emit('registerUser', myAccount);
+            alert(`تم استبدال ${diamondsCost} ماسة بنجاح، وحصلت على ${goldReward} ذهب 🪙`);
+        }
+
+        function triggerNameChangeShop() {
+            let cost = (myAccount.nameChanges === 0) ? 0 : 100;
+            let confirmMsg = (cost === 0) ? "تغيير الاسم الأول لك مجاني بالكامل! هل تود الاستمرار؟" : `تغيير الاسم سيكلفك ${cost} ماسة 💎 من رصيدك الحالي، هل أنت موافق؟`;
+            
+            if (cost > 0 && myAccount.diamonds < cost) return alert("رصيدك من الألماس غير كافي لتغيير الاسم!");
+            
+            if (confirm(confirmMsg)) {
+                let newName = prompt("اكتب اسمك الجديد الفخم هنا (حد أقصى 12 حرف):");
+                if (!newName || !newName.trim()) return;
+                if (newName.trim().length > 12) return alert("الاسم طويل جداً!");
+
+                myAccount.diamonds -= cost;
+                myAccount.nameChanges += 1;
+                myAccount.name = newName.trim();
+                socket.emit('registerUser', myAccount);
+                alert("تم تحديث اسمك بنجاح في السيرفر وعلى بروفايلك!");
+            }
+        }
+
+        // نافذة الإعدادات العامة والوضع الليلي والنهاري
+        function openGlobalSettings() { runSoundClick(); document.getElementById('settingsModal').style.display = 'flex'; }
+        function closeGlobalSettings() { runSoundClick(); document.getElementById('settingsModal').style.display = 'none'; }
+        
+        function switchThemeMode() {
             let currentTheme = document.documentElement.getAttribute('data-theme');
-            let newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('xo_theme', newTheme);
-            document.getElementById('themeBtn').innerText = newTheme === 'dark' ? '☀️' : '🌙';
-            playClickSound();
-        });
+            let nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', nextTheme);
+            localStorage.setItem('xo_platform_theme', nextTheme);
+            document.getElementById('themeToggleBtn').innerText = nextTheme === 'dark' ? '☀️ نهاري' : '🌙 ليلى';
+            playCleanTone(600, 0.05);
+        }
 
-        document.getElementById('volumeSlider').addEventListener('input', (e) => {
-            volume = parseFloat(e.target.value);
-        });
-
-        document.getElementById('settingsToggleBtn').addEventListener('click', () => {
-            toggleSettings();
-            playClickSound();
+        document.getElementById('volSlider').addEventListener('input', (e) => {
+            globalVolumeSetting = parseFloat(e.target.value);
         });
     </script>
 </body>
