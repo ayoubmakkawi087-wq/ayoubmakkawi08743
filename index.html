@@ -30,9 +30,24 @@
         .history-dots { display: flex; justify-content: center; gap: 6px; margin-top: 10px; }
         .dot { padding: 2px 7px; font-size: 10px; border-radius: 5px; color: white; font-weight: bold; }
         .dot.فوز { background-color: var(--accent-o); } .dot.خسارة { background-color: var(--accent-x); } .dot.تعادل { background-color: var(--text-muted); }
+        
+        /* ساحة اللعبة وشبكة الأزرار */
         .game-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; max-width: 280px; margin: 12px auto; }
-        .cell { aspect-ratio: 1; background-color: var(--bg-color); border: 2px solid var(--border); border-radius: 12px; font-size: 32px; display: flex; justify-content: center; align-items: center; cursor: pointer; user-select: none; }
-        .cell.X { color: var(--accent-x); font-weight: bold; } .cell.O { color: var(--accent-o); font-weight: bold; }
+        .cell { aspect-ratio: 1; background-color: var(--bg-color); border: 2px solid var(--border); border-radius: 12px; font-size: 32px; display: flex; justify-content: center; align-items: center; cursor: pointer; user-select: none; transition: all 0.2s ease; }
+        
+        /* تصاميم ومظاهر الرموز المخصصة والمشتراة */
+        .cell.style-x-default { color: var(--accent-x); font-weight: bold; }
+        .cell.style-o-default { color: var(--accent-o); font-weight: bold; }
+        .cell.style-x-glow { color: #ff3366; font-weight: 900; text-shadow: 0 0 12px #ff3366, 0 0 20px #ff3366; font-family: 'Courier New', monospace; }
+        .cell.style-o-glow { color: #00f0ff; font-weight: 900; text-shadow: 0 0 12px #00f0ff, 0 0 20px #00f0ff; font-family: 'Courier New', monospace; }
+        .cell.style-x-gold { color: #ffd700; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.8); background: linear-gradient(135deg, #ffd700, #b8860b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 36px; }
+        .cell.style-o-gold { color: #ffd700; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.8); background: linear-gradient(135deg, #ffd700, #b8860b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 36px; }
+
+        /* تصاميم ومظاهر خلفيات الجيم المخصصة والمشتراة */
+        .bg-style-default { background-color: var(--card-bg) !important; }
+        .bg-style-blue-night { background: radial-gradient(circle, #1e3a8a 0%, #0f172a 100%) !important; border: 1px solid #3b82f6 !important; }
+        .bg-style-purple-luxury { background: linear-gradient(135deg, #581c87 0%, #1e1b4b 100%) !important; border: 1px solid #a855f7 !important; }
+
         .user-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid var(--border); background: var(--bg-color); margin-bottom: 6px; border-radius: 10px; }
         .status-indicator { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-left: 6px; }
         .status-online { background-color: var(--online); } .status-offline { background-color: var(--offline); }
@@ -49,9 +64,29 @@
         .chat-messages { flex: 1; background: var(--bg-color); border-radius: 12px; padding: 10px; overflow-y: auto; margin-bottom: 10px; border: 1px solid var(--border); }
         .msg-bubble { margin-bottom: 8px; padding: 6px 10px; border-radius: 8px; max-width: 80%; font-size: 12px; }
         .msg-mine { background: var(--primary); margin-right: auto; text-align: left; } .msg-other { background: #334155; margin-left: auto; text-align: right; }
+        
         .tabs { display: flex; border-top: 1px solid var(--border); background: var(--card-bg); }
         .tab-item { flex: 1; padding: 12px 2px; text-align: center; cursor: pointer; font-size: 11px; font-weight: bold; color: var(--text-muted); }
         .tab-item.active { color: white; background: var(--primary); }
+        .btn-copy { background: none; border: none; color: #38bdf8; cursor: pointer; display: inline-flex; align-items: center; font-size: 12px; padding: 0 4px; }
+        
+        .shop-grid { display: grid; grid-template-columns: repeat(1, 1fr); gap: 10px; margin-top: 10px; }
+        .shop-item { background: var(--bg-color); border: 1px solid var(--border); border-radius: 12px; padding: 14px; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; }
+        .shop-item-info { text-align: right; }
+        .shop-item-title { font-weight: bold; font-size: 14px; color: #f8fafc; }
+        .shop-item-cost { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+        
+        /* ستايل المربعات الـ 6 الجديدة بالمتجر */
+        .empty-slots-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+        .empty-slot-item { background: var(--bg-color); border: 1px solid var(--border); border-radius: 12px; aspect-ratio: 0.85; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 10px; box-sizing: border-box; text-align: center; position: relative; }
+        .slot-title { font-size: 11px; font-weight: bold; color: #f8fafc; }
+        .slot-price { font-size: 10px; color: #38bdf8; margin: 4px 0; }
+
+        /* ستايل الخزنة والمخزن */
+        .vault-section { background: var(--bg-color); padding: 12px; border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--border); }
+        .vault-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .vault-item { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+        .vault-item-title { font-size: 12px; font-weight: bold; margin-bottom: 6px; }
     </style>
 </head>
 <body>
@@ -63,7 +98,10 @@
                 <div class="currency-item">💎 <span id="diamondCount">0</span></div>
                 <div class="currency-item">🪙 <span id="goldCount">0</span></div>
             </div>
-            <div style="font-size:12px; color:var(--text-muted)">المعرف: <span id="myAccountIDText" style="color:white; font-weight:bold;">-</span></div>
+            <div style="font-size:12px; color:var(--text-muted)">
+                المعرف: <span id="myAccountIDText" style="color:white; font-weight:bold;">-</span>
+                <button class="btn-copy" onclick="copyMyID()" title="نسخ المعرف">📋</button>
+            </div>
         </div>
 
         <div class="screen" id="scrRegister">
@@ -144,6 +182,62 @@
             </div>
         </div>
 
+        <div class="screen" id="scrShop">
+            <h2>🛒 متجر المظاهر والألوان التنافسي</h2>
+            
+            <div class="empty-slots-grid" id="shopItemsGridContainer">
+                </div>
+
+            <div class="section-block">
+                <div class="block-title">🪙 استبدال الذهب بالألماس المباشر</div>
+                <div class="shop-grid">
+                    <div class="shop-item">
+                        <div class="shop-item-info">
+                            <div class="shop-item-title">💎 100 ألماس</div>
+                            <div class="shop-item-cost">السعر: 🪙 1,500 قولد</div>
+                        </div>
+                        <button class="btn-sm" style="background:var(--accent-o);" onclick="buyDiamondsPack(100)">شراء</button>
+                    </div>
+
+                    <div class="shop-item">
+                        <div class="shop-item-info">
+                            <div class="shop-item-title">💎 500 ألماس</div>
+                            <div class="shop-item-cost">السعر: 🪙 8,000 قولد</div>
+                        </div>
+                        <button class="btn-sm" style="background:var(--accent-o);" onclick="buyDiamondsPack(500)">شراء</button>
+                    </div>
+
+                    <div class="shop-item">
+                        <div class="shop-item-info">
+                            <div class="shop-item-title">💎 1,000 ألماس</div>
+                            <div class="shop-item-cost">السعر: 🪙 17,000 قولد</div>
+                        </div>
+                        <button class="btn-sm" style="background:var(--accent-o);" onclick="buyDiamondsPack(1000)">شراء</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="screen" id="scrVault">
+            <h2>📦 خزنتك الشخصية (المظاهر المفعلة)</h2>
+            <p style="font-size:11px; color:var(--text-muted); margin-top:-5px; margin-bottom:15px;">هنا تجد كافة الألوان والخلفيات التقليدية والمشتراة، قم بتفعيل ما يناسبك منها:</p>
+            
+            <div class="vault-section">
+                <div class="block-title">❌ مظاهر وأشكال رمز الـ X</div>
+                <div class="vault-grid" id="vaultXContainer"></div>
+            </div>
+
+            <div class="vault-section">
+                <div class="block-title">⭕ مظاهر وأشكال رمز الـ O</div>
+                <div class="vault-grid" id="vaultOContainer"></div>
+            </div>
+
+            <div class="vault-section">
+                <div class="block-title">🖼️ مظاهر وخلفيات ساحة المعركة</div>
+                <div class="vault-grid" id="vaultBgContainer"></div>
+            </div>
+        </div>
+
         <div class="screen" id="scrChatsTab">
             <h2>💬 غرف المحادثات الفورية للأصدقاء</h2>
             <div style="display:flex; gap:8px; margin-bottom:10px;">
@@ -173,11 +267,13 @@
                 </div>
             </div>
             <div id="gameTurnStatus" style="text-align:center; font-size:12px; margin:10px 0; font-weight:bold;">جاري التحضير...</div>
-            <div class="game-grid">
+            
+            <div class="game-grid bg-style-default" id="mainGameGridBoard">
                 <div class="cell" id="c0" onclick="sendCellClick(0)"></div><div class="cell" id="c1" onclick="sendCellClick(1)"></div><div class="cell" id="c2" onclick="sendCellClick(2)"></div>
                 <div class="cell" id="c3" onclick="sendCellClick(3)"></div><div class="cell" id="c4" onclick="sendCellClick(4)"></div><div class="cell" id="c5" onclick="sendCellClick(5)"></div>
                 <div class="cell" id="c6" onclick="sendCellClick(6)"></div><div class="cell" id="c7" onclick="sendCellClick(7)"></div><div class="cell" id="c8" onclick="sendCellClick(8)"></div>
             </div>
+            
             <div class="section-block" style="padding:8px; margin-top:5px; background:rgba(0,0,0,0.2);">
                 <div id="gameChatAreaMessages" style="height:60px; overflow-y:auto; font-size:11px; background:var(--bg-color); padding:5px; border-radius:6px; margin-bottom:5px;"></div>
                 <div style="display:flex; gap:4px;">
@@ -197,8 +293,9 @@
         <div class="tabs" id="lobbyTabs" style="display:none;">
             <div class="tab-item active" id="tabMenu" onclick="switchLobbyTab('scrMenu')">⚔️ رادار اللعب</div>
             <div class="tab-item" id="tabFriends" onclick="switchLobbyTab('scrFriends')">👥 الأصدقاء</div>
-            <div class="tab-item" id="tabProfile" onclick="switchLobbyTab('scrProfile')">👤 البروفايل</div>
+            <div class="tab-item" id="tabVault" onclick="switchLobbyTab('scrVault')">📦 الخزنة</div>
             <div class="tab-item" id="tabScoreboard" onclick="switchLobbyTab('scrScoreboard')">🏆 السكور</div>
+            <div class="tab-item" id="tabShop" onclick="switchLobbyTab('scrShop')">🛒 المتجر</div>
             <div class="tab-item" id="tabChatsTab" onclick="switchLobbyTab('scrChatsTab')">💬 المحادثات</div>
         </div>
 
@@ -210,19 +307,36 @@
 
     <script>
         const socket = io();
-        let myAccount = { userId: "", name: "", avatar: "🥷", bio: "", gold: 1000, diamonds: 150, score: 10, friends: [], friendRequests: [], history: [] };
+        let myAccount = { userId: "", name: "", avatar: "🥷", bio: "", gold: 1000, diamonds: 150, score: 10, friends: [], friendRequests: [], history: [], inventory: [] };
         let allGlobalUsers = []; let activeRoomId = ""; let currentSymbol = ""; let myTurnActive = false; let selectedChatFriendId = "";
         let opponentUserIdInMatch = "";
 
+        // المظاهر والخيارات المحددة والمفعلة حالياً من الخزنة
+        let myActiveStyles = { xStyle: 'style-x-default', oStyle: 'style-o-default', bgStyle: 'bg-style-default' };
+
+        // مصفوفة تعريف العناصر الـ 6 لأسعار الجواهر بشكل تدريجي (100 إلى 10000)
+        const shopItemsData = [
+            { id: 'style-x-glow', type: 'X', name: 'X متوهج أحمر', cost: 100, className: 'style-x-glow', preview: 'X' },
+            { id: 'style-o-glow', type: 'O', name: 'O متوهج أزرق', cost: 500, className: 'style-o-glow', preview: 'O' },
+            { id: 'style-x-gold', type: 'X', name: 'X ملكي ذهبي', cost: 1500, className: 'style-x-gold', preview: 'X' },
+            { id: 'style-o-gold', type: 'O', name: 'O ملكي ذهبي', cost: 3000, className: 'style-o-gold', preview: 'O' },
+            { id: 'bg-style-blue-night', type: 'BG', name: 'ساحة ليلية زرقاء', cost: 6000, className: 'bg-style-blue-night', preview: '🌌' },
+            { id: 'bg-style-purple-luxury', type: 'BG', name: 'ساحة أرجوانية فاخرة', cost: 10000, className: 'bg-style-purple-luxury', preview: '🔮' }
+        ];
+
         window.onload = () => {
             let localData = localStorage.getItem('xo_competitive_account_v5');
+            // استرجاع تفضيلات المظاهر الفعالة من المتصفح إن وجدت
+            let localStyles = localStorage.getItem('xo_active_styles_v5');
+            if (localStyles) myActiveStyles = JSON.parse(localStyles);
+
             if (localData) { myAccount = JSON.parse(localData); socket.emit('registerUser', myAccount); } else { showScreen('scrRegister'); }
         };
 
         function showScreen(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
-            let isLobby = ['scrMenu', 'scrFriends', 'scrProfile', 'scrScoreboard', 'scrCustomRoom', 'scrChatsTab'].includes(id);
+            let isLobby = ['scrMenu', 'scrFriends', 'scrProfile', 'scrScoreboard', 'scrCustomRoom', 'scrChatsTab', 'scrShop', 'scrVault'].includes(id);
             document.getElementById('topCurrencyBar').style.display = isLobby ? 'flex' : 'none';
             document.getElementById('lobbyTabs').style.display = isLobby ? 'flex' : 'none';
         }
@@ -234,10 +348,35 @@
             socket.emit('searchUsers'); showScreen(tabId);
         }
 
+        function copyMyID() {
+            if (!myAccount.userId || myAccount.userId === "-") return;
+            navigator.clipboard.writeText(myAccount.userId).then(() => {
+                alert("📋 تم نسخ المعرف ID بنجاح: " + myAccount.userId);
+            }).catch(() => {
+                alert("فشل النسخ التلقائي، معرفك هو: " + myAccount.userId);
+            });
+        }
+
         function submitRegistration() {
             let name = document.getElementById('regName').value.trim(); if (!name) return alert("يرجى كتابة الاسم الشخصي للبدء!");
             myAccount.name = name; myAccount.avatar = document.getElementById('regAvatar').value; myAccount.bio = document.getElementById('regBio').value.trim();
             socket.emit('registerUser', myAccount);
+        }
+
+        function buyDiamondsPack(packAmount) { socket.emit('buyDiamonds', packAmount); }
+
+        function triggerPurchaseItem(itemId) {
+            let item = shopItemsData.find(i => i.id === itemId);
+            if (item) socket.emit('buyShopItem', item);
+        }
+
+        function selectAndActivateStyle(type, styleId) {
+            if (type === 'X') myActiveStyles.xStyle = styleId;
+            else if (type === 'O') myActiveStyles.oStyle = styleId;
+            else if (type === 'BG') myActiveStyles.bgStyle = styleId;
+            localStorage.setItem('xo_active_styles_v5', JSON.stringify(myActiveStyles));
+            renderVaultItemsLists();
+            alert("🎯 تم تفعيل المظهر الجديد بنجاح! سيتم تطبيقه تلقائياً في معاركك القادمة.");
         }
 
         socket.on('updateProfile', (updatedData) => {
@@ -273,9 +412,78 @@
                     pendingArea.appendChild(div);
                 });
             }
+            
+            // ريندر المتجر والخزنة بناء على المشتريات المستلمة من السيرفر
+            renderShopItemsGrid();
+            renderVaultItemsLists();
+
             renderMyActualFriendsListWithStatus(); refreshRandomPlayersList();
             let activeScreen = document.querySelector('.screen.active'); if (!activeScreen || activeScreen.id === 'scrRegister') { switchLobbyTab('scrMenu'); }
         });
+
+        // ريندر المتجر: المربعات التي تم شراؤها تختفي تماماً وتنتقل للخزنة
+        function renderShopItemsGrid() {
+            let grid = document.getElementById('shopItemsGridContainer'); if (!grid) return; grid.innerHTML = "";
+            let unownedItems = shopItemsData.filter(item => !(myAccount.inventory || []).includes(item.id));
+            
+            if (unownedItems.length === 0) {
+                grid.innerHTML = "<div style='grid-column: span 3; text-align:center; padding:20px; color:var(--accent-o); font-size:13px; font-weight:bold;'>🎉 لقد قمت بشراء كافة أشكال ومظاهر المتجر! متجرك فارغ الآن.</div>";
+                return;
+            }
+
+            unownedItems.forEach(item => {
+                let box = document.createElement('div'); box.className = "empty-slot-item";
+                box.innerHTML = `
+                    <div class="slot-title">${item.name}</div>
+                    <div class="cell ${item.className}" style="width:50px; height:50px; font-size:20px; border:none; pointer-events:none; background-color:transparent;">${item.preview}</div>
+                    <div class="slot-price">💎 ${item.cost.toLocaleString()}</div>
+                    <button class="btn-sm" style="background:var(--accent-o); width:100%; padding:4px;" onclick="triggerPurchaseItem('${item.id}')">شراء</button>
+                `;
+                grid.appendChild(box);
+            });
+        }
+
+        // ريندر الخزنة: تحتوي على التقليدي دائماً + الأشياء المشتراة
+        function renderVaultItemsLists() {
+            let containerX = document.getElementById('vaultXContainer');
+            let containerO = document.getElementById('vaultOContainer');
+            let containerBg = document.getElementById('vaultBgContainer');
+            if(!containerX || !containerO || !containerBg) return;
+
+            containerX.innerHTML = ""; containerO.innerHTML = ""; containerBg.innerHTML = "";
+
+            // 1. إضافة الخيارات التقليدية الافتراضية أولاً
+            appendVaultItemCard(containerX, { id: 'style-x-default', type: 'X', name: 'X تقليدي (افتراضي)', className: 'style-x-default', preview: 'X' });
+            appendVaultItemCard(containerO, { id: 'style-o-default', type: 'O', name: 'O تقليدي (افتراضي)', className: 'style-o-default', preview: 'O' });
+            appendVaultItemCard(containerBg, { id: 'bg-style-default', type: 'BG', name: 'ساحة كلاسيكية ليلية', className: 'bg-style-default', preview: '⬛' });
+
+            // 2. إضافة العناصر المشتراة والموجودة في الـ inventory
+            shopItemsData.forEach(item => {
+                if ((myAccount.inventory || []).includes(item.id)) {
+                    if (item.type === 'X') appendVaultItemCard(containerX, item);
+                    else if (item.type === 'O') appendVaultItemCard(containerO, item);
+                    else if (item.type === 'BG') appendVaultItemCard(containerBg, item);
+                }
+            });
+        }
+
+        function appendVaultItemCard(targetContainer, item) {
+            let isCurrentActive = false;
+            if (item.type === 'X' && myActiveStyles.xStyle === item.id) isCurrentActive = true;
+            if (item.type === 'O' && myActiveStyles.oStyle === item.id) isCurrentActive = true;
+            if (item.type === 'BG' && myActiveStyles.bgStyle === item.id) isCurrentActive = true;
+
+            let card = document.createElement('div'); card.className = "vault-item";
+            card.style.border = isCurrentActive ? "2px solid var(--accent-o)" : "1px solid var(--border)";
+            
+            card.innerHTML = `
+                <div class="vault-item-title">${item.name}</div>
+                <button class="btn-sm ${isCurrentActive ? 'btn-sec' : ''}" style="width:100%; font-size:11px;" ${isCurrentActive ? 'disabled' : ''} onclick="selectAndActivateStyle('${item.type}', '${item.id}')">
+                    ${isCurrentActive ? '✓ مُفعّل حالياً' : '⚙️ تفعيل الآن'}
+                </button>
+            `;
+            targetContainer.appendChild(card);
+        }
 
         function acceptFriend(userId) { socket.emit('acceptFriend', userId); }
         function rejectFriendRequest(userId) { socket.emit('rejectFriendRequest', userId); }
@@ -298,25 +506,14 @@
 
         function sendFriendRequest(userId) { socket.emit('sendFriendRequest', userId); }
 
-        // آلية جلب وعرض 5 لاعبين عشوائيين مع زر التحديث
         function refreshRandomPlayersList() {
-            let container = document.getElementById('randomPlayersContainer'); if (!container) return;
-            container.innerHTML = "";
+            let container = document.getElementById('randomPlayersContainer'); if (!container) return; container.innerHTML = "";
             let potentialList = allGlobalUsers.filter(u => u.userId !== myAccount.userId && !(myAccount.friends || []).some(f => f.userId === u.userId));
             let shuffled = potentialList.sort(() => 0.5 - Math.random()).slice(0, 5);
             if (shuffled.length === 0) { container.innerHTML = "<div style='color:var(--text-muted); font-size:11px; text-align:center;'>لا يوجد لاعبين متاحين حالياً.</div>"; return; }
             shuffled.forEach(player => {
                 let div = document.createElement('div'); div.className = "user-row";
-                div.innerHTML = `
-                    <div>
-                        <span class="status-indicator status-online"></span>
-                        <span>${player.avatar} <b>${player.name}</b></span>
-                    </div>
-                    <div style="display:flex; gap:4px;">
-                        <button class="btn-sm btn-outline" onclick="openOtherPlayerProfilePopupInCenter('${player.userId}')">👤 بروفايل</button>
-                        <button class="btn-sm" onclick="sendFriendRequest('${player.userId}')">➕ إضافة</button>
-                    </div>
-                `;
+                div.innerHTML = `<div><span class="status-indicator status-online"></span><span>${player.avatar} <b>${player.name}</b></span></div><div style="display:flex; gap:4px;"><button class="btn-sm btn-outline" onclick="openOtherPlayerProfilePopupInCenter('${player.userId}')">👤 بروفايل</button><button class="btn-sm" onclick="sendFriendRequest('${player.userId}')">➕ إضافة</button></div>`;
                 container.appendChild(div);
             });
         }
@@ -375,6 +572,7 @@
         function joinCustomRoomCode() {
             let code = document.getElementById('customRoomCode').value.trim(); if (!code) return alert("الرجاء إدخال اسم أو كود الغرفة أولاً!");
             activeRoomId = code; document.getElementById('roomInviteSection').style.display = 'block'; renderInviteFriendsList();
+            socket.emit('joinCustomRoomDirect', code);
         }
 
         function renderInviteFriendsList() {
@@ -408,13 +606,25 @@
             document.getElementById('p2Name').innerText = data.opponent.name; document.getElementById('p2ScoreLabel').innerText = ` [سكور: ${data.opponent.score}]`;
             document.getElementById('matchTimer').innerText = "02:00";
 
-            // فحص حالة الصداقة لتعطيل الزر في حال كان صديقاً بالفعل
             let isAlreadyFriend = (myAccount.friends || []).some(f => f.userId === data.opponent.userId);
             let btn = document.getElementById('oppHoverAddBtn');
             if (isAlreadyFriend) { btn.innerText = "✓ صديقك"; btn.disabled = true; } else { btn.innerText = "➕ إضافة كصديق"; btn.disabled = false; btn.onclick = () => { sendFriendRequest(data.opponent.userId); }; }
 
             document.getElementById('oppHoverBio').innerText = `الوصف: ${data.opponent.bio || 'جاهز للتحدي!'}`;
-            document.getElementById('gameChatAreaMessages').innerHTML = ""; clearGridVisuals(); updateTurnText(); showScreen('scrGame');
+            document.getElementById('gameChatAreaMessages').innerHTML = ""; 
+            
+            // تطبيق الخلفية المفعلة من خزنتي محلياً، وإرسال إشعار لمزامنتها للخصم
+            let boardElement = document.getElementById('mainGameGridBoard');
+            boardElement.className = `game-grid ${myActiveStyles.bgStyle}`;
+            socket.emit('syncBackgroundStyle', { room: activeRoomId, bgStyle: myActiveStyles.bgStyle });
+
+            clearGridVisuals(); updateTurnText(); showScreen('scrGame');
+        });
+
+        socket.on('opponentBackgroundSynced', (data) => {
+            // تحديث الخلفية لتطابق اختيار من أنشأ أو شارك بساحة اللعب
+            let boardElement = document.getElementById('mainGameGridBoard');
+            if(boardElement && data.bgStyle) { boardElement.className = `game-grid ${data.bgStyle}`; }
         });
 
         socket.on('timerUpdate', (seconds) => {
@@ -422,10 +632,23 @@
             document.getElementById('matchTimer').innerText = `${mins}:${secs}`;
         });
 
-        function sendCellClick(idx) { if (!myTurnActive) return; if (document.getElementById(`c${idx}`).innerText !== "") return; socket.emit('makeMove', { room: activeRoomId, index: idx, symbol: currentSymbol }); }
+        function sendCellClick(idx) { 
+            if (!myTurnActive) return; 
+            if (document.getElementById(`c${idx}`).innerText !== "") return; 
+            // تمرير الأنماط والمظاهر المفعلة بالخزنة ليركب المظهر بشكل صحيح عند الطرفين
+            socket.emit('makeMove', { room: activeRoomId, index: idx, symbol: currentSymbol, styles: myActiveStyles }); 
+        }
 
         socket.on('moveMade', (data) => {
-            let cell = document.getElementById(`c${data.index}`); cell.innerText = data.symbol; cell.className = `cell ${data.symbol}`;
+            let cell = document.getElementById(`c${data.index}`); cell.innerText = data.symbol; 
+            
+            // تركيب الفئات والـ CSS بناء على خيار ومظهر الخزنة للاعب الذي قام بالحركة
+            if (data.symbol === 'X') {
+                cell.className = `cell ${data.styles ? data.styles.xStyle : 'style-x-default'}`;
+            } else {
+                cell.className = `cell ${data.styles ? data.styles.oStyle : 'style-o-default'}`;
+            }
+
             myTurnActive = (data.nextTurnSymbol === currentSymbol); updateTurnText(); evaluateGridLocally();
         });
 
@@ -455,7 +678,7 @@
         socket.on('friendRequestRejectedNotification', (data) => { filterSearchUsersList(); });
         socket.on('gameNotification', (msg) => { alert(msg); exitGameToLobby(); });
 
-        function exitGameToLobby() { activeRoomId = ""; switchLobbyTab('scrMenu'); }
+        function exitGameToLobby() { if (document.getElementById('scrWaiting').classList.contains('active')) { socket.emit('cancelMatchmaking'); } activeRoomId = ""; switchLobbyTab('scrMenu'); }
     </script>
 </body>
 </html>
