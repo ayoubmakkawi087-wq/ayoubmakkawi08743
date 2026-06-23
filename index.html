@@ -3,22 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة X-O الاحترافية</title>
+    <title>منصة X-O الأسطورية الاحترافية</title>
     <script src="/socket.io/socket.io.js"></script>
     <style>
         :root {
-            --bg-color: #f1f5f9;
+            --bg-color: #f8fafc;
             --card-bg: #ffffff;
             --text-main: #0f172a;
             --text-muted: #64748b;
             --primary: #2563eb;
-            --primary-light: #dbeafe;
+            --primary-light: #eff6ff;
             --accent-x: #ef4444;
             --accent-o: #10b981;
             --border: #e2e8f0;
         }
         [data-theme="dark"] {
-            --bg-color: #0b0f19;
+            --bg-color: #0f172a;
             --card-bg: #1e293b;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
@@ -30,223 +30,114 @@
         }
 
         body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            margin: 0; padding: 0;
-            display: flex; justify-content: center; align-items: center;
-            min-height: 100vh;
-            transition: background-color 0.3s, color 0.3s;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color); color: var(--text-main);
+            margin: 0; padding: 0; display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; transition: background-color 0.3s, color 0.3s;
         }
 
-        /* حاوية اللعبة المتجاوبة بالكامل */
         .app-container {
-            width: 100%;
-            max-width: 500px;
-            background-color: var(--card-bg);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            box-shadow: 0 0 40px rgba(0,0,0,0.1);
-            overflow: hidden;
+            width: 100%; max-width: 480px; background-color: var(--card-bg);
+            min-height: 100vh; display: flex; flex-direction: column; position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08); overflow: hidden; box-sizing: border-box;
         }
-        @media (min-height: 700px) and (min-width: 550px) {
-            .app-container {
-                min-height: 85vh;
-                max-height: 90vh;
-                border-radius: 24px;
-            }
+        @media (min-width: 500px) {
+            .app-container { min-height: 85vh; max-height: 92vh; border-radius: 24px; border: 1px solid var(--border); }
         }
 
-        /* شريط العملات العلوي والثابت في اللوبي والمجر */
         .currency-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 20px;
-            border-bottom: 1px solid var(--border);
-            background-color: var(--card-bg);
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 20px; border-bottom: 1px solid var(--border); background-color: var(--card-bg);
         }
-        .currency-box {
-            display: flex;
-            gap: 15px;
-            font-weight: bold;
-            font-size: 15px;
-        }
-        .currency-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: var(--bg-color);
-            padding: 4px 10px;
-            border-radius: 20px;
-        }
+        .currency-box { display: flex; gap: 12px; font-weight: bold; font-size: 14px; }
+        .currency-item { display: flex; align-items: center; gap: 5px; background: var(--bg-color); padding: 5px 12px; border-radius: 30px; }
 
-        /* الشاشات التبادلية */
-        .screen {
-            display: none;
-            flex: 1;
-            padding: 20px;
-            flex-direction: column;
-            overflow-y: auto;
-            box-sizing: border-box;
-        }
+        .screen { display: none; flex: 1; padding: 20px; flex-direction: column; overflow-y: auto; box-sizing: border-box; }
         .screen.active { display: flex; }
 
-        h1 { font-size: 22px; text-align: center; margin: 10px 0 20px; }
-        
+        h1, h2, h3 { text-align: center; margin: 10px 0 15px; font-size: 18px; }
+        label { font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; display: block; }
+
         input, select, textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            font-size: 15px;
-            box-sizing: border-box;
-            margin-bottom: 15px;
+            width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 12px;
+            background-color: var(--bg-color); color: var(--text-main); font-size: 14px;
+            box-sizing: border-box; margin-bottom: 15px; outline: none;
         }
 
         button {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            background-color: var(--primary);
-            color: white;
-            transition: opacity 0.2s;
-            margin-bottom: 10px;
+            width: 100%; padding: 13px; border: none; border-radius: 12px;
+            font-size: 14px; font-weight: bold; cursor: pointer;
+            background-color: var(--primary); color: white; transition: all 0.2s ease;
+            margin-bottom: 10px; display: flex; justify-content: center; align-items: center; gap: 6px;
         }
         button:hover { opacity: 0.9; }
         .btn-sec { background-color: var(--text-muted); }
-        .btn-outline { background: transparent; border: 2px solid var(--border); color: var(--text-main); }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
         .btn-danger { background-color: var(--accent-x); }
+        .btn-sm { padding: 5px 10px; font-size: 11px; width: auto; display: inline-flex; margin: 0; }
 
-        /* البروفايل وكروت الأصدقاء */
-        .profile-card {
-            background: var(--bg-color);
-            padding: 15px;
-            border-radius: 16px;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .avatar-view { font-size: 45px; margin-bottom: 5px; }
-        .history-dots {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            margin-top: 10px;
-        }
-        .dot {
-            padding: 2px 8px;
-            font-size: 11px;
-            border-radius: 6px;
-            color: white;
-            font-weight: bold;
-        }
+        .profile-card { background: var(--bg-color); padding: 15px; border-radius: 20px; text-align: center; margin-bottom: 15px; border: 1px solid var(--border); }
+        .avatar-view { font-size: 50px; margin-bottom: 5px; cursor: pointer; }
+        .history-dots { display: flex; justify-content: center; gap: 6px; margin-top: 10px; }
+        .dot { padding: 3px 7px; font-size: 9px; border-radius: 5px; color: white; font-weight: bold; }
         .dot.فوز { background-color: var(--accent-o); }
         .dot.خسارة { background-color: var(--accent-x); }
         .dot.تعادل { background-color: var(--text-muted); }
 
-        /* شبكة اللعبة التنافسية المحسنة الهوية والأحجام */
-        .game-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            width: 100%;
-            max-width: 340px;
-            margin: 20px auto;
+        .volume-container { display: flex; align-items: center; width: 100%; margin: 10px 0; }
+        .volume-container input[type="range"] {
+            -webkit-appearance: none; width: 100%; height: 10px; border-radius: 6px;
+            background: var(--primary); outline: none; margin: 0; padding: 0; cursor: pointer;
         }
+        .volume-container input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none; width: 20px; height: 20px;
+            border-radius: 50%; background: #ffffff; border: 3px solid var(--primary); cursor: pointer;
+        }
+
+        .game-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; max-width: 300px; margin: 15px auto; }
         .cell {
-            aspect-ratio: 1;
-            background-color: var(--bg-color);
-            border: 2px solid var(--border);
-            border-radius: 16px;
-            font-size: 42px;
-            font-weight: 200;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
+            aspect-ratio: 1; background-color: var(--bg-color); border: 2px solid var(--border);
+            border-radius: 16px; font-size: 36px; display: flex; justify-content: center; align-items: center; cursor: pointer; user-select: none;
         }
         .cell.X { color: var(--accent-x); font-weight: bold; }
         .cell.O { color: var(--accent-o); font-weight: bold; }
 
-        .player-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            background: var(--primary-light);
-            border-radius: 12px;
-            font-size: 14px;
-        }
-
-        /* أيقونة زر الشات الجانبي العائم والإشعار */
         .chat-toggle-btn {
-            position: absolute;
-            bottom: 80px; left: 20px;
-            width: 50px; height: 50px;
-            border-radius: 50%;
-            background: var(--primary);
-            color: white; font-size: 22px;
-            display: flex; justify-content: center; align-items: center;
-            cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            z-index: 99;
+            position: absolute; bottom: 85px; left: 20px; width: 52px; height: 52px;
+            border-radius: 50%; background: var(--primary); color: white; font-size: 22px;
+            display: flex; justify-content: center; align-items: center; cursor: pointer; z-index: 99;
         }
-        .badge {
-            position: absolute; top: -2px; right: -2px;
-            background: red; width: 12px; height: 12px;
-            border-radius: 50%; display: none;
-        }
+        .badge { position: absolute; top: 2px; right: 28%; background: red; color: white; font-size: 10px; font-weight: bold; width: 16px; height: 16px; border-radius: 50%; display: flex; justify-content: center; align-items: center; }
 
-        /* نافذة شاشة الشات المنسدلة من الجانب */
         .chat-sidebar {
-            position: absolute;
-            top: 0; left: -100%; width: 100%; height: 100%;
-            background: var(--card-bg);
-            z-index: 100; transition: left 0.3s ease;
-            display: flex; flex-direction: column;
+            position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: var(--card-bg); z-index: 100; transition: left 0.3s ease;
+            display: flex; flex-direction: column; box-sizing: border-box;
         }
         .chat-sidebar.open { left: 0; }
-        .chat-header {
-            padding: 15px; border-bottom: 1px solid var(--border);
-            display: flex; justify-content: space-between; align-items: center;
-        }
+        .chat-header { padding: 15px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--bg-color); }
         .chat-logs { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
-        .chat-input-bar { display: flex; padding: 10px; border-top: 1px solid var(--border); }
-        .chat-input-bar input { margin: 0; border-radius: 12px 0 0 12px; }
-        .chat-input-bar button { width: auto; margin: 0; border-radius: 0 12px 12px 0; }
+        .chat-msg { background: var(--bg-color); padding: 10px 14px; border-radius: 12px; max-width: 85%; font-size: 13px; }
+        .chat-msg.me { background: var(--primary); color: white; align-self: flex-start; }
+        .chat-msg.other { align-self: flex-end; background: var(--border); }
+        .chat-input-bar { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--border); }
+        .chat-input-bar input { margin: 0; }
 
-        /* نافذة شاشة نهاية القيم المنبثقة والصلبة لمنع التعليق */
-        .game-over-modal {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.75); z-index: 200;
-            display: none; justify-content: center; align-items: center; padding: 20px;
-            box-sizing: border-box;
-        }
-        .game-over-modal.active { display: flex; }
-        .modal-content {
-            background: var(--card-bg); width: 100%; padding: 25px;
-            border-radius: 20px; text-align: center;
-        }
-
-        /* المتجر والبحث القوائم */
-        .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .shop-item { border: 1px solid var(--border); padding: 12px; border-radius: 12px; text-align: center; background: var(--bg-color); }
         .user-row {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 10px; border-bottom: 1px solid var(--border);
+            padding: 12px; border-bottom: 1px solid var(--border); background: var(--card-bg); margin-bottom: 5px; border-radius: 12px;
         }
 
-        /* التبويبات السفلية للوبي */
-        .tabs { display: flex; border-top: 1px solid var(--border); background: var(--card-bg); }
-        .tab-item { flex: 1; padding: 15px; text-align: center; cursor: pointer; font-size: 14px; font-weight: bold; }
-        .tab-item.active { color: var(--primary); border-top: 3px solid var(--primary); }
+        .game-over-modal {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 200; display: none; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
+        }
+        .game-over-modal.active { display: flex; }
+        .modal-content { background: var(--card-bg); width: 100%; padding: 20px; border-radius: 20px; text-align: center; }
+
+        .tabs { display: flex; border-top: 1px solid var(--border); background: var(--card-bg); position: relative; }
+        .tab-item { flex: 1; padding: 15px; text-align: center; cursor: pointer; font-size: 13px; font-weight: bold; color: var(--text-muted); position: relative; }
+        .tab-item.active { color: var(--primary); border-top: 3px solid var(--primary); background: var(--primary-light); }
     </style>
 </head>
 <body>
@@ -258,90 +149,76 @@
                 <div class="currency-item">💎 <span id="diamondCount">0</span></div>
                 <div class="currency-item">🪙 <span id="goldCount">0</span></div>
             </div>
-            <div>
-                <button class="icon-btn" onclick="openGlobalSettings()" style="width:auto; background:none; color:var(--text-main); font-size:20px; padding:0; margin:0;">⚙️</button>
-            </div>
+            <button onclick="openGlobalSettings()" style="width:auto; background:none; color:var(--text-main); font-size:20px; padding:0; margin:0;">⚙️</button>
         </div>
 
         <div class="screen" id="scrRegister">
-            <h1>إنشاء ملف حساب أسطوري</h1>
-            <label>اختر الرمز أو الأفتار المفضل:</label>
+            <h1>إنشاء حساب أسطوري</h1>
+            <label>اختر الأفتار المفضل:</label>
             <select id="regAvatar">
                 <option value="🥷">🥷 نينجا</option>
                 <option value="🦁">🦁 أسد</option>
                 <option value="👑">👑 ملك</option>
-                <option value="🎮">🎮 قيمر</option>
-                <option value="💎">💎 ماسة</option>
+                <option value="🦊">🦊 ثعلب</option>
             </select>
-            <label>اسم اللاعب (الحد الأقصى 12 حرف):</label>
-            <input type="text" id="regName" placeholder="اكتب اسمك هنا..." maxlength="12">
-            <label>اكتب وصفاً قصيراً لبروفايلك:</label>
-            <textarea id="regBio" placeholder="أنا المحترف القادم..." rows="2" maxlength="40"></textarea>
-            <button onclick="submitRegistration()">ابدأ المغامرة والعب أونلاين</button>
+            <label>اسم اللاعب الثابت (لن يتكرر):</label>
+            <input type="text" id="regName" placeholder="اكتب اسمك المميز هنا..." maxlength="12">
+            <label>وصف ملفك الشخصي:</label>
+            <textarea id="regBio" placeholder="جاهز للتحدي وسحق المنافسين..." rows="2" maxlength="40"></textarea>
+            <button onclick="submitRegistration()">ابدأ اللعب الآن</button>
         </div>
 
         <div class="screen" id="scrMenu">
             <div class="profile-card">
-                <div class="avatar-view" id="profAvatar">🥷</div>
+                <div class="avatar-view" id="profAvatar" onclick="openEditProfileModal()">🥷</div>
                 <h2 id="profName" style="margin:2px 0;">-</h2>
-                <p id="profBio" style="font-size:13px; color:var(--text-muted); margin:4px 0;">-</p>
+                <p id="profBio" style="font-size:12px; color:var(--text-muted); margin:4px 0;">-</p>
                 <div class="history-dots" id="profHistory"></div>
-                <button class="btn-outline" style="padding:4px; font-size:12px; width:auto; margin-top:10px;" onclick="triggerNameChangeShop()">تغيير الاسم يدوياً</button>
+                <button class="btn-outline btn-sm" style="margin-top:8px;" onclick="openEditProfileModal()">📝 تغيير الاسم والبيانات (💎100)</button>
             </div>
-            <button onclick="startRandomMatch()">⚔️ لعب عشوائي ضد محترف</button>
-            <button class="btn-sec" onclick="showScreen('scrCustomRoom')">🏠 إنشاء أو دخول روم مخصص</button>
+            <button onclick="startRandomMatch()">⚔️ بدء لعب عشوائي فوري</button>
+            <button class="btn-sec" onclick="showScreen('scrCustomRoom')">🏠 إنشاء روم خاص للأصدقاء</button>
         </div>
 
         <div class="screen" id="scrCustomRoom">
-            <h1>لعب داخل روم مخصص</h1>
-            <input type="text" id="customRoomCode" placeholder="أدخل رقم أو رمز الروم هنا...">
-            <button onclick="joinCustomRoomCode()">دخول / إنشاء الروم</button>
-            <button class="btn-sec" onclick="goBackToLobby()">العودة للخلف</button>
+            <h1>إنشاء أو دخول روم خاص</h1>
+            <input type="text" id="customRoomCode" placeholder="أدخل رقم أو اسم الروم...">
+            <button onclick="joinCustomRoomCode()">دخول الروم</button>
+            
+            <div id="roomInviteSection" style="display:none; margin-top:15px; background:var(--bg-color); padding:10px; border-radius:12px;">
+                <p style="font-size:12px; margin:0 0 8px; font-weight:bold;">✉️ إرسال دعوة سريعة لأصدقائك:</p>
+                <div id="inviteFriendsContainer"></div>
+            </div>
+            <button class="btn-outline" style="margin-top:15px;" onclick="goBackToLobby()">⬅️ العودة للرئيسية</button>
         </div>
 
         <div class="screen" id="scrFriends">
-            <h2>قائمة الأصدقاء (<span id="friendCounter">0</span>/50)</h2>
-            <div id="friendsListArea" style="flex:1; overflow-y:auto; min-height:100px; margin-bottom:15px;"></div>
+            <h3 style="text-align:right; font-size:14px; color:var(--accent-x);">📬 طلبات صداقة بانتظار قبولك:</h3>
+            <div id="pendingRequestsArea" style="background:var(--primary-light); border-radius:12px; padding:5px; margin-bottom:15px; min-height:40px;"></div>
+
+            <h3 style="text-align:right; font-size:14px;">👥 أصدقائي الحاليين (<span id="friendCountText">0</span>/50):</h3>
+            <div id="friendsListArea" style="min-height:60px; margin-bottom:15px; max-height:180px; overflow-y:auto;"></div>
             
-            <h2>البحث عن لاعبين وإضافتهم</h2>
-            <button class="btn-outline" onclick="refreshSearchUsers()">🔄 تحديث قائمة البحث</button>
+            <h3 style="text-align:right; font-size:14px;">🔍 ابحث عن لاعبين متاحين بالاسم:</h3>
+            <input type="text" id="friendSearchInput" oninput="filterSearchUsersList()" placeholder="اكتب اسم اللاعب هنا للبحث الفوري...">
             <div id="searchUsersArea" style="flex:1; overflow-y:auto;"></div>
         </div>
 
         <div class="screen" id="scrShop">
-            <h1>متجر المزايا والعملات</h1>
-            <div class="shop-grid">
-                <div class="shop-item"><span style="color:var(--text-muted); font-size:12px;">خانات فارغة للمستقبل</span></div>
-                <div class="shop-item"><span style="color:var(--text-muted); font-size:12px;">خانات فارغة للمستقبل</span></div>
-                <div class="shop-item"><span style="color:var(--text-muted); font-size:12px;">خانات فارغة للمستقبل</span></div>
-                
-                <div class="shop-item" style="border:2px solid var(--primary)">
-                    <h3>حزم الألماس 💎</h3>
-                    <button style="font-size:11px; padding:6px;" onclick="buyDiamondsSimulate(100, 1)">100 💎 بـ 1$</button>
-                    <button style="font-size:11px; padding:6px;" onclick="buyDiamondsSimulate(1000, 10)">1000 💎 بـ 10$</button>
-                    <button style="font-size:11px; padding:6px;" onclick="buyDiamondsSimulate(3000, 30)">3000 💎 بـ 30$</button>
-                </div>
-                <div class="shop-item" style="border:2px solid var(--accent-o)">
-                    <h3>شراء الذهب 🪙</h3>
-                    <button style="font-size:11px; padding:6px;" onclick="convertDiamondsToGold(1, 50)">50 🪙 بـ 1💎</button>
-                    <button style="font-size:11px; padding:6px;" onclick="convertDiamondsToGold(10, 500)">500 🪙 بـ 10💎</button>
-                    <button style="font-size:11px; padding:6px;" onclick="convertDiamondsToGold(100, 5000)">5000 🪙 بـ 100💎</button>
-                </div>
+            <h1>متجر الجواهر والذهب</h1>
+            <div style="background:var(--bg-color); padding:15px; border-radius:15px; text-align:center;">
+                <h3>شحن مجوهرات محاكاة 💎</h3>
+                <button class="btn-sm" onclick="buyDiamondsSimulate(500)">شحن 500 جـوهرة 💎</button>
             </div>
         </div>
 
         <div class="screen" id="scrGame">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <div class="player-header" style="border-right:4px solid var(--accent-x)">
-                    <span id="p1Name">-</span> <span id="p1Symbol">(X)</span>
-                </div>
-                <div style="font-weight:bold; font-size:18px; color:var(--primary)" id="matchTimer">02:00</div>
-                <div class="player-header" style="border-left:4px solid var(--accent-o)">
-                    <span id="p2Name">-</span> <span id="p2Symbol">(O)</span>
-                </div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div style="font-size:12px;"><span id="p1Name">-</span> <span id="p1Symbol"></span></div>
+                <div style="font-weight:bold; color:var(--primary)" id="matchTimer">02:00</div>
+                <div style="font-size:12px;"><span id="p2Name">-</span> <span id="p2Symbol"></span></div>
             </div>
-
-            <div id="gameTurnStatus" style="text-align:center; font-weight:bold; margin:10px 0;">جاري بدء الجولة...</div>
+            <div id="gameTurnStatus" style="text-align:center; font-weight:bold; margin:10px 0;">جاري التهيئة...</div>
 
             <div class="game-grid">
                 <div class="cell" id="c0" onclick="sendCellClick(0)"></div>
@@ -354,58 +231,68 @@
                 <div class="cell" id="c7" onclick="sendCellClick(7)"></div>
                 <div class="cell" id="c8" onclick="sendCellClick(8)"></div>
             </div>
-
-            <button class="btn-danger" style="margin-top:20px;" onclick="exitGameToLobby()">🚪 انسحاب ومغادرة القيم</button>
+            <button class="btn-danger" style="margin-top:15px;" onclick="exitGameToLobby()">🚪 انسحاب استسلام</button>
         </div>
 
         <div class="screen" id="scrWaiting">
-            <h2 id="waitText" style="text-align:center; margin-top:50px;">جاري الاتصال...</h2>
-            <button class="btn-danger" style="margin-top:20px;" onclick="exitGameToLobby()">إلغاء والعودة</button>
+            <h2 id="waitText">⏳ بانتظار دخول الخصم...</h2>
+            <button class="btn-danger" onclick="exitGameToLobby()">إلغاء والعودة</button>
         </div>
 
         <div class="tabs" id="lobbyTabs" style="display:none;">
             <div class="tab-item active" id="tabMenu" onclick="switchLobbyTab('scrMenu')">⚔️ ساحة اللعب</div>
-            <div class="tab-item" id="tabFriends" onclick="switchLobbyTab('scrFriends')">👥 الأصدقاء</div>
+            <div class="tab-item" id="tabFriends" onclick="switchLobbyTab('scrFriends')">
+                👥 الأصدقاء
+                <div class="badge" id="requestsCountBadge" style="display:none;">0</div>
+            </div>
             <div class="tab-item" id="tabShop" onclick="switchLobbyTab('scrShop')">🛒 المتجر</div>
         </div>
 
-        <div class="chat-toggle-btn" id="chatToggleBtn" style="display:none;" onclick="openChatSidebar()">
-            💬
-            <div class="badge" id="chatBadge"></div>
-        </div>
+        <div class="chat-toggle-btn" id="chatToggleBtn" style="display:none;" onclick="openChatSidebar()">💬</div>
 
         <div class="chat-sidebar" id="chatSidebar">
-            <div class="chat-header">
-                <h3>شات التحدي المباشر</h3>
-                <button class="btn-sec" style="width:auto; padding:5px 10px; margin:0;" onclick="closeChatSidebar()">إغلاق</button>
-            </div>
+            <div class="chat-header"><h3>شات المباراة المباشر</h3><button class="btn-sec btn-sm" onclick="closeChatSidebar()">إغلاق</button></div>
             <div class="chat-logs" id="chatLogs"></div>
-            <div class="chat-input-bar">
-                <input type="text" id="chatInputField" placeholder="اكتب رسالة سريعة...">
-                <button onclick="sendLiveMessage()">إرسال</button>
-            </div>
+            <div class="chat-input-bar"><input type="text" id="chatInputField" placeholder="اكتب للخصم..."><button class="btn-sm" onclick="sendLiveMessage()">إرسال</button></div>
+        </div>
+
+        <div class="chat-sidebar" id="privateChatSidebar">
+            <div class="chat-header"><h3>محادثة خاصة: <span id="privateChatPartnerName">-</span></h3><button class="btn-sec btn-sm" onclick="closePrivateChatSidebar()">عودة</button></div>
+            <div class="chat-logs" id="privateChatLogs"></div>
+            <div class="chat-input-bar"><input type="text" id="privateChatInputField" placeholder="اكتب رسالة خاصة وسرية..."><button class="btn-sm" onclick="sendPrivateMessageToServer()">إرسال</button></div>
         </div>
 
         <div class="game-over-modal" id="gameOverModal">
-            <div class="modal-content">
-                <h1 id="gameOverTitle" style="font-size:26px;">انتهى القيم</h1>
-                <p id="gameOverBody" style="font-size:16px; margin-bottom:25px;">-</p>
-                <button onclick="triggerRematchRequest()">🔄 العب مرة أخرى</button>
-                <button class="btn-sec" onclick="closeModalCompletelyAndGoLobby()">🏠 العودة للقائمة الرئيسية</button>
+            <div class="modal-content"><h1 id="gameOverTitle">-</h1><p id="gameOverBody">-</p><button onclick="triggerRematchRequest()">🔄 طلب جولة انتقامية ثانية</button><button class="btn-sec" onclick="closeModalCompletelyAndGoLobby()">🏠 القائمة الرئيسية</button></div>
+        </div>
+
+        <div class="game-over-modal" id="editProfileModal">
+            <div class="modal-content" style="text-align:right;">
+                <h2>تعديل بطاقتك التعريفية (تغيير الاسم بـ 💎100)</h2>
+                <label>تحديث الاسم باللعبة:</label>
+                <input type="text" id="editNameInput" maxlength="12">
+                <label>تحديث الأفتار الشخصي:</label>
+                <select id="editAvatarSelect"><option value="🥷">🥷 نينجا</option><option value="🦁">🦁 أسد</option><option value="👑">👑 ملك</option><option value="🦊">🦊 ثعلب</option></select>
+                <label>تعديل الوصف (البيو):</label>
+                <input type="text" id="editBioInput" maxlength="40">
+                <button onclick="saveProfileChangesOnline()">حفظ التحديثات فوراً</button>
+                <button class="btn-sec" onclick="closeEditProfileModal()">إلغاء</button>
             </div>
         </div>
 
         <div class="game-over-modal" id="settingsModal">
             <div class="modal-content" style="text-align:right;">
                 <h2>إعدادات المنصة العامة</h2>
-                <hr style="border-color:var(--border)">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin:15px 0;">
-                    <label>الوضع المريح للعين:</label>
-                    <button class="btn-outline" id="themeToggleBtn" style="width:auto; margin:0;" onclick="switchThemeMode()">🌙 ليلى</button>
-                </div>
-                <div style="display:flex; justify-content:space-between; align-items:center; margin:15px 0;">
-                    <label>مستوى التحكم بالصوت:</label>
-                    <input type="range" id="volSlider" min="0" max="1" step="0.1" value="0.5" style="width:60%; margin:0;">
+                
+                <label>مظهر واجهة المنصة الداكن/الفاتح:</label>
+                <select id="themeSelector" onchange="changeAppThemeViaSelector()">
+                    <option value="dark">🌙 الوضع الليلي (Dark Mode)</option>
+                    <option value="light">☀️ الوضع النهاري (Light Mode)</option>
+                </select>
+
+                <label>مستوى التحكم بالصوت:</label>
+                <div class="volume-container">
+                    <input type="range" id="volSlider" min="0" max="1" step="0.01" value="0.5">
                 </div>
                 <button class="btn-sec" style="margin-top:15px;" onclick="closeGlobalSettings()">إغلاق وحفظ</button>
             </div>
@@ -414,407 +301,375 @@
     </div>
 
     <script>
-        let myAccount = { name: "", avatar: "🥷", bio: "", gold: 1000, diamonds: 0, nameChanges: 0, friends: [], history: [] };
+        const socket = io();
+        let myAccount = { name: "", avatar: "🥷", bio: "", gold: 1000, diamonds: 150, friends: [], friendRequests: [], history: [] };
+        let allGlobalUsers = [];
         let activeRoomId = "";
         let currentSymbol = "";
         let myTurnActive = false;
-        let isChatOpen = false;
-        let globalVolumeSetting = 0.5;
-
-        // تأثيرات أصوات سينثسايزر ويب المريحة والخفيفة جداً
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        function playCleanTone(frequency, duration, type = 'sine') {
-            if (globalVolumeSetting === 0) return;
-            let osc = audioContext.createOscillator();
-            let gainNode = audioContext.createGain();
-            osc.type = type;
-            osc.frequency.value = frequency;
-            gainNode.gain.setValueAtTime(globalVolumeSetting * 0.2, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + duration);
-            osc.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            osc.start(); osc.stop(audioContext.currentTime + duration);
-        }
-
-        function runSoundClick() { playCleanTone(550, 0.08); }
-        function runSoundWin() { playCleanTone(523, 0.12); setTimeout(() => playCleanTone(659, 0.15), 100); setTimeout(() => playCleanTone(783, 0.25), 200); }
-        function runSoundLose() { playCleanTone(380, 0.15); setTimeout(() => playCleanTone(240, 0.3), 150); }
-        function runSoundChatAlert() { playCleanTone(880, 0.05); setTimeout(() => playCleanTone(880, 0.05), 70); }
+        let currentActivePrivateChatFriendId = "";
 
         window.onload = () => {
-            // تحميل البيانات المحفوظة محلياً في ذاكرة الجهاز
-            let localData = localStorage.getItem('xo_platform_account');
-            let localTheme = localStorage.getItem('xo_platform_theme') || 'light';
-            
-            document.documentElement.setAttribute('data-theme', localTheme);
-            document.getElementById('themeToggleBtn').innerText = localTheme === 'dark' ? '☀️ نهاري' : '🌙 ليلي';
+            let savedTheme = localStorage.getItem('xo_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            document.getElementById('themeSelector').value = savedTheme;
 
+            let localData = localStorage.getItem('xo_account_v3');
             if (localData) {
                 myAccount = JSON.parse(localData);
                 socket.emit('registerUser', myAccount);
-                showLobbyDashboard();
             } else {
                 showScreen('scrRegister');
             }
         };
 
+        function changeAppThemeViaSelector() {
+            let selectedTheme = document.getElementById('themeSelector').value;
+            document.documentElement.setAttribute('data-theme', selectedTheme);
+            localStorage.setItem('xo_theme', selectedTheme);
+        }
+
         function showScreen(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
+            let isLobby = ['scrMenu', 'scrFriends', 'scrShop', 'scrCustomRoom'].includes(id);
+            document.getElementById('topCurrencyBar').style.display = isLobby ? 'flex' : 'none';
+            document.getElementById('lobbyTabs').style.display = isLobby ? 'flex' : 'none';
             
-            // إخفاء أو إظهار بار العملات والتبويبات
-            if (id === 'scrMenu' || id === 'scrFriends' || id === 'scrShop' || id === 'scrCustomRoom') {
-                document.getElementById('topCurrencyBar').style.display = 'flex';
-                document.getElementById('lobbyTabs').style.display = 'flex';
+            if (id === 'scrGame') {
+                document.getElementById('chatToggleBtn').style.display = 'flex';
             } else {
-                document.getElementById('topCurrencyBar').style.display = 'none';
-                document.getElementById('lobbyTabs').style.display = 'none';
-            }
-            // إخفاء الشات عند الخروج من اللعب
-            if (id !== 'scrGame') {
                 document.getElementById('chatToggleBtn').style.display = 'none';
                 closeChatSidebar();
+            }
+
+            if (id === 'scrCustomRoom' && activeRoomId) {
+                document.getElementById('roomInviteSection').style.display = 'block';
+                renderInviteFriendsList();
             }
         }
 
         function switchLobbyTab(tabId) {
-            runSoundClick();
             document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
             if (tabId === 'scrMenu') document.getElementById('tabMenu').classList.add('active');
-            if (tabId === 'scrFriends') { document.getElementById('tabFriends').classList.add('active'); socket.emit('searchUsers'); }
+            if (tabId === 'scrFriends') {
+                document.getElementById('tabFriends').classList.add('active');
+                socket.emit('searchUsers');
+            }
             if (tabId === 'scrShop') document.getElementById('tabShop').classList.add('active');
             showScreen(tabId);
         }
 
         function submitRegistration() {
             let name = document.getElementById('regName').value.trim();
-            if (!name) return alert("الرجاء كتابة الاسم للبدء!");
-            if (name.length > 12) return alert("الاسم طويل جداً، حدد 12 حرف فقط.");
-
+            if (!name) return alert("الرجاء إدخال الاسم أولاً!");
             myAccount.name = name;
             myAccount.avatar = document.getElementById('regAvatar').value;
-            myAccount.bio = document.getElementById('regBio').value.trim() || "لاعب أسطوري محب للمنافسة!";
-            myAccount.gold = 1000; // إعطاء 1000 ذهب مجاني عند الدخول لأول مرة
-            myAccount.diamonds = 0;
-            myAccount.nameChanges = 0;
-            myAccount.friends = [];
-            myAccount.history = [];
-
-            localStorage.setItem('xo_platform_account', JSON.stringify(myAccount));
+            myAccount.bio = document.getElementById('regBio').value.trim();
             socket.emit('registerUser', myAccount);
-            showLobbyDashboard();
         }
 
         socket.on('updateProfile', (updatedData) => {
             myAccount = updatedData;
-            localStorage.setItem('xo_platform_account', JSON.stringify(myAccount));
+            localStorage.setItem('xo_account_v3', JSON.stringify(myAccount));
             
-            // تحديث واجهة كرت البروفايل العلوي
             document.getElementById('diamondCount').innerText = myAccount.diamonds;
             document.getElementById('goldCount').innerText = myAccount.gold;
             document.getElementById('profName').innerText = myAccount.name;
             document.getElementById('profAvatar').innerText = myAccount.avatar;
             document.getElementById('profBio').innerText = myAccount.bio;
-            document.getElementById('friendCounter').innerText = myAccount.friends.length;
+            document.getElementById('friendCountText').innerText = myAccount.friends.length;
 
-            // طباعة سجل آخر 3 مباريات فوز أو خسارة أو تعادل
-            let histArea = document.getElementById('profHistory');
-            histArea.innerHTML = "";
-            myAccount.history.forEach(h => {
-                let dot = document.createElement('span');
-                dot.className = `dot ${h}`;
-                dot.innerText = h;
-                histArea.appendChild(dot);
-            });
+            let badge = document.getElementById('requestsCountBadge');
+            if (myAccount.friendRequests && myAccount.friendRequests.length > 0) {
+                badge.style.display = "flex";
+                badge.innerText = myAccount.friendRequests.length;
+            } else {
+                badge.style.display = "none";
+            }
+
+            let pendingArea = document.getElementById('pendingRequestsArea');
+            pendingArea.innerHTML = "";
+            if (!myAccount.friendRequests || myAccount.friendRequests.length === 0) {
+                pendingArea.innerHTML = "<div style='color:var(--text-muted); font-size:11px; text-align:center; padding:5px;'>لا توجد طلبات صداقة واردة حالياً.</div>";
+            } else {
+                myAccount.friendRequests.forEach(req => {
+                    let div = document.createElement('div');
+                    div.style = "display:flex; justify-content:space-between; align-items:center; padding:6px; border-bottom:1px solid var(--border);";
+                    div.innerHTML = `
+                        <div style="font-size:12px;">${req.avatar} <strong>${req.name}</strong></div>
+                        <div style="display:flex; gap:4px;">
+                            <button class="btn-sm" style="background:var(--accent-o);" onclick="acceptFriendRequest('${req.id}')">قبول</button>
+                            <button class="btn-sm btn-danger" onclick="rejectFriendRequest('${req.id}')">رفض</button>
+                        </div>
+                    `;
+                    pendingArea.appendChild(div);
+                });
+            }
+
+            let fArea = document.getElementById('friendsListArea');
+            fArea.innerHTML = "";
+            if (myAccount.friends.length === 0) {
+                fArea.innerHTML = "<div style='color:var(--text-muted); text-align:center; font-size:11px; padding:10px;'>لم تقم بإضافة أي أصدقاء حتى الآن.</div>";
+            } else {
+                myAccount.friends.forEach(f => {
+                    let row = document.createElement('div');
+                    row.className = "user-row";
+                    row.innerHTML = `
+                        <div>${f.avatar} <strong>${f.name}</strong></div>
+                        <div style="display:flex; gap:5px;">
+                            <button class="btn-sm" onclick="openPrivateChatSidebar('${f.id}', '${f.name}')">💬 شات</button>
+                            <button class="btn-sm btn-danger" onclick="removeFriendFromServer('${f.id}')">🗑️ حذف</button>
+                        </div>
+                    `;
+                    fArea.appendChild(row);
+                });
+            }
+
+            // *** حل مشكلة الشاشة البيضاء والتعليق عند الـ Reload ***
+            let activeScreen = document.querySelector('.screen.active');
+            if (!activeScreen || activeScreen.id === 'scrRegister') {
+                switchLobbyTab('scrMenu');
+            }
+            
+            filterSearchUsersList();
         });
 
-        function showLobbyDashboard() {
-            switchLobbyTab('scrMenu');
+        function acceptFriendRequest(id) { socket.emit('acceptFriend', id); }
+        function rejectFriendRequest(id) { socket.emit('rejectFriend', id); }
+        function removeFriendFromServer(id) { if(confirm("هل تود بالتأكيد حذف هذا الصديق نهائياً؟")) { socket.emit('removeFriendOnServer', id); } }
+
+        socket.on('globalUserList', (users) => { allGlobalUsers = users; filterSearchUsersList(); });
+        socket.on('userListUpdate', (users) => { allGlobalUsers = users; filterSearchUsersList(); });
+
+        function filterSearchUsersList() {
+            let query = document.getElementById('friendSearchInput').value.toLowerCase().trim();
+            let area = document.getElementById('searchUsersArea');
+            if(!area) return;
+            area.innerHTML = "";
+
+            let count = 0;
+            allGlobalUsers.forEach(u => {
+                if (u.id === socket.id) return;
+                if (query && !u.name.toLowerCase().includes(query)) return;
+
+                count++;
+                let btnHTML = `<button class="btn-sm" onclick="sendFriendRequestToServer('${u.id}')">➕ إضافة صديق</button>`;
+                
+                if (myAccount.friends && myAccount.friends.some(f => f.id === u.id)) {
+                    btnHTML = `<span style="color:var(--accent-o); font-size:11px; font-weight:bold;">✓ صديقك الحالي</span>`;
+                } else if (myAccount.friendRequests && myAccount.friendRequests.some(r => r.id === u.id)) {
+                    btnHTML = `<span style="color:var(--text-muted); font-size:11px;">وصلك طلب منه</span>`;
+                }
+
+                let row = document.createElement('div');
+                row.className = "user-row";
+                row.innerHTML = `
+                    <div>${u.avatar} <strong>${u.name}</strong><br><small style="color:var(--text-muted); font-size:11px;">${u.bio}</small></div>
+                    <div>${btnHTML}</div>
+                `;
+                area.appendChild(row);
+            });
+
+            if(count === 0) {
+                area.innerHTML = "<div style='color:var(--text-muted); text-align:center; font-size:11px; padding:10px;'>لا توجد نتائج بحث مطابقة حالياً.</div>";
+            }
         }
 
-        function goBackToLobby() {
-            runSoundClick();
-            showLobbyDashboard();
+        function sendFriendRequestToServer(id) { socket.emit('sendFriendRequest', id); alert("🚀 تم إرسال طلب الصداقة بنجاح!"); }
+
+        function openPrivateChatSidebar(friendId, friendName) {
+            currentActivePrivateChatFriendId = friendId;
+            document.getElementById('privateChatPartnerName').innerText = friendName;
+            document.getElementById('privateChatLogs').innerHTML = "";
+            document.getElementById('privateChatSidebar').classList.add('open');
+            socket.emit('getPrivateChatHistory', friendId); 
         }
 
-        // إطلاق اللعب والمنافسة
-        function startRandomMatch() { runSoundClick(); socket.emit('joinRandom'); }
+        socket.on('receivePrivateHistory', (history) => {
+            let logs = document.getElementById('privateChatLogs');
+            logs.innerHTML = "";
+            history.forEach(msg => {
+                let side = msg.fromId === socket.id ? 'me' : 'other';
+                logs.innerHTML += `<div class="chat-msg ${side}"><strong>${msg.senderName}:</strong> ${msg.message}</div>`;
+            });
+            logs.scrollTop = logs.scrollHeight;
+        });
+
+        function sendPrivateMessageToServer() {
+            let input = document.getElementById('privateChatInputField');
+            let txt = input.value.trim(); if (!txt) return;
+            socket.emit('sendPrivateMessage', { toId: currentActivePrivateChatFriendId, message: txt });
+            input.value = "";
+        }
+
+        socket.on('receivePrivateMessage', (msg) => {
+            if (currentActivePrivateChatFriendId === msg.fromId || currentActivePrivateChatFriendId === msg.toId) {
+                let logs = document.getElementById('privateChatLogs');
+                let side = msg.fromId === socket.id ? 'me' : 'other';
+                logs.innerHTML += `<div class="chat-msg ${side}"><strong>${msg.senderName}:</strong> ${msg.message}</div>`;
+                logs.scrollTop = logs.scrollHeight;
+            } else {
+                alert(`📩 رسالة خاصة من [ ${msg.senderName} ]: ${msg.message}`);
+            }
+        });
+
+        function closePrivateChatSidebar() { document.getElementById('privateChatSidebar').classList.remove('open'); }
+
+        function startRandomMatch() { 
+            document.getElementById('waitText').innerText = "⏳ بانتظار دخول الخصم...";
+            showScreen('scrWaiting');
+            socket.emit('joinRandom'); 
+        }
+        function goBackToLobby() { switchLobbyTab('scrMenu'); }
+        
         function joinCustomRoomCode() {
-            runSoundClick();
             let code = document.getElementById('customRoomCode').value.trim();
-            if (!code) return alert("الرجاء إدخال رمز الروم!");
+            if (!code) return alert("أدخل رقم الروم أولاً!");
+            activeRoomId = code;
+            document.getElementById('roomInviteSection').style.display = 'block';
+            renderInviteFriendsList();
             socket.emit('joinRoom', code);
         }
 
-        socket.on('waiting', (msg) => {
-            document.getElementById('waitText').innerText = msg;
-            showScreen('scrWaiting');
+        function renderInviteFriendsList() {
+            let container = document.getElementById('inviteFriendsContainer');
+            container.innerHTML = "";
+            if (myAccount.friends.length === 0) {
+                container.innerHTML = "<span style='font-size:11px; color:var(--text-muted);'>قائمة الأصدقاء فارغة لإرسال دعوات.</span>";
+                return;
+            }
+            myAccount.friends.forEach(f => {
+                let div = document.createElement('div');
+                div.style = "display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid var(--border);";
+                div.innerHTML = `
+                    <div style="font-size:12px;">${f.avatar} ${f.name}</div>
+                    <button class="btn-sm" style="padding:3px 7px;" onclick="inviteFriendToMyRoom('${f.id}')">📬 دعوة</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function inviteFriendToMyRoom(id) { socket.emit('inviteFriendToRoom', { friendId: id, roomCode: activeRoomId }); alert("تم إرسال دعوة الروم بنجاح!"); }
+
+        socket.on('roomInviteReceived', (data) => {
+            if (confirm(`📬 دعوة انضمام من [ ${data.hostName} ] لروم رقم: ${data.roomCode}\nهل تقبل الدخول؟`)) {
+                activeRoomId = data.hostName;
+                showScreen('scrCustomRoom');
+                document.getElementById('customRoomCode').value = data.roomCode;
+                socket.emit('joinRoom', data.roomCode);
+            }
         });
 
+        socket.on('waiting', (msg) => { document.getElementById('waitText').innerText = msg; showScreen('scrWaiting'); });
+
         socket.on('gameStart', (data) => {
-            activeRoomId = data.room;
-            currentSymbol = data.symbol;
-            myTurnActive = (currentSymbol === 'X');
-
-            // ترتيب عرض الأسماء بدقة: اللاعب الحالي أولاً والخصم ثانياً
-            document.getElementById('p1Name').innerText = myAccount.name;
-            document.getElementById('p1Symbol').innerText = `(${currentSymbol})`;
-            document.getElementById('p2Name').innerText = data.opponent.name;
-            document.getElementById('p2Symbol').innerText = `(${currentSymbol === 'X' ? 'O' : 'X'})`;
-
-            clearGridVisuals();
-            updateTurnText();
-            
+            activeRoomId = data.room; currentSymbol = data.symbol; myTurnActive = (currentSymbol === 'X');
+            document.getElementById('p1Name').innerText = myAccount.name; document.getElementById('p1Symbol').innerText = `(${currentSymbol})`;
+            document.getElementById('p2Name').innerText = data.opponent.name; document.getElementById('p2Symbol').innerText = `(${currentSymbol==='X'?'O':'X'})`;
+            clearGridVisuals(); updateTurnText(); showScreen('scrGame');
             document.getElementById('chatLogs').innerHTML = "";
-            document.getElementById('chatToggleBtn').style.display = 'flex';
-            document.getElementById('chatBadge').style.display = 'none';
-
-            showScreen('scrGame');
         });
 
         function sendCellClick(idx) {
             if (!myTurnActive) return;
-            let cell = document.getElementById(`c${idx}`);
-            if (cell.innerText !== "") return;
-
-            runSoundClick();
+            if (document.getElementById(`c${idx}`).innerText !== "") return;
             socket.emit('makeMove', { room: activeRoomId, index: idx, symbol: currentSymbol });
         }
 
         socket.on('moveMade', (data) => {
             let cell = document.getElementById(`c${data.index}`);
-            cell.innerText = data.symbol;
-            cell.className = `cell ${data.symbol}`;
-
+            cell.innerText = data.symbol; cell.className = `cell ${data.symbol}`;
             myTurnActive = (data.nextTurnSymbol === currentSymbol);
-            updateTurnText();
-            evaluateGridLocally();
+            updateTurnText(); evaluateGridLocally();
         });
 
-        function updateTurnText() {
-            document.getElementById('gameTurnStatus').innerText = myTurnActive ? "دورك الآن، العب بذكاء! 🤔" : "انتظر حركة الخصم... ⏳";
+        function updateTurnText() { document.getElementById('gameTurnStatus').innerText = myTurnActive ? "دورك الآن!" : "انتظر الخصم..."; }
+        function clearGridVisuals() { for (let i = 0; i < 9; i++) { let c = document.getElementById(`c${i}`); c.innerText = ""; c.className = "cell"; } }
+
+        function openChatSidebar() { document.getElementById('chatSidebar').classList.add('open'); }
+        function closeChatSidebar() { document.getElementById('chatSidebar').classList.remove('open'); }
+        
+        function sendLiveMessage() {
+            let input = document.getElementById('chatInputField');
+            let text = input.value.trim();
+            if (!text) return;
+            socket.emit('sendChatMessage', { room: activeRoomId, message: text });
+            input.value = "";
         }
 
-        function clearGridVisuals() {
-            for (let i = 0; i < 9; i++) {
-                let cell = document.getElementById(`c${i}`);
-                cell.innerText = "";
-                cell.className = "cell";
-            }
-        }
+        socket.on('receiveChatMessage', (data) => {
+            let logs = document.getElementById('chatLogs');
+            let side = data.sender === myAccount.name ? 'me' : 'other';
+            logs.innerHTML += `<div class="chat-msg ${side}"><strong>${data.sender}:</strong> ${data.message}</div>`;
+            logs.scrollTop = logs.scrollHeight;
+        });
 
-        // فحص حالة الجيم محلياً لحساب المكافآت وحفظ النتائج فوراً ومنع التعليق
         function evaluateGridLocally() {
-            let cells = [];
-            for (let i = 0; i < 9; i++) cells.push(document.getElementById(`c${i}`).innerText);
-
+            let cells = []; for (let i = 0; i < 9; i++) cells.push(document.getElementById(`c${i}`).innerText);
             const patterns = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
             let winSymbol = null;
-
-            for (let p of patterns) {
-                if (cells[p[0]] && cells[p[0]] === cells[p[1]] && cells[p[0]] === cells[p[2]]) {
-                    winSymbol = cells[p[0]];
-                    break;
-                }
-            }
-
+            for (let p of patterns) { if (cells[p[0]] && cells[p[0]] === cells[p[1]] && cells[p[0]] === cells[p[2]]) { winSymbol = cells[p[0]]; break; } }
             if (winSymbol) {
                 let res = (winSymbol === currentSymbol) ? "فوز" : "خسارة";
-                if (res === "فوز") { runSoundWin(); openGameOverModal("🎉 انتصار ساحق!", "كفو! فزت بالجولة وحصلت على 100 عملة ذهبية مجانية!"); }
-                else { runSoundLose(); openGameOverModal("💔 خسارة!", "حظاً أوفر في المرة القادمة، الخصم انتصر عليك!"); }
+                openGameOverModal(res === "فوز" ? "🎉 انتصار أسطوري!" : "💔 حظاً أوفر!", "انتهت اللعبة!");
                 socket.emit('gameEndResult', { room: activeRoomId, result: res });
                 myTurnActive = false;
             } else if (!cells.includes("")) {
-                runSoundClick();
-                openGameOverModal("🤝 تعادل قوي!", "جيم متكافئ بين المحترفين، انتهت الجولة بالتعادل!");
+                openGameOverModal("🤝 تعادل قوي!", "تكافأت القوى!");
                 socket.emit('gameEndResult', { room: activeRoomId, result: "تعادل" });
                 myTurnActive = false;
             }
         }
 
         function openGameOverModal(title, body) {
-            document.getElementById('gameOverTitle').innerText = title;
-            document.getElementById('gameOverBody').innerText = body;
+            document.getElementById('gameOverTitle').innerText = title; document.getElementById('gameOverBody').innerText = body;
             document.getElementById('gameOverModal').classList.add('active');
         }
+        function closeModalCompletelyAndGoLobby() { document.getElementById('gameOverModal').classList.remove('active'); exitGameToLobby(); }
+        function triggerRematchRequest() { socket.emit('restartGame', activeRoomId); }
+        socket.on('restart', () => { clearGridVisuals(); myTurnActive = (currentSymbol === 'X'); updateTurnText(); document.getElementById('gameOverModal').classList.remove('active'); });
 
-        function closeModalCompletelyAndGoLobby() {
-            runSoundClick();
-            document.getElementById('gameOverModal').classList.remove('active');
-            exitGameToLobby();
-        }
-
-        function triggerRematchRequest() {
-            runSoundClick();
-            document.getElementById('gameOverModal').classList.remove('active');
-            socket.emit('restartGame', activeRoomId);
-        }
-
-        socket.on('restart', () => {
-            clearGridVisuals();
-            myTurnActive = (currentSymbol === 'X');
-            updateTurnText();
-            document.getElementById('gameOverModal').classList.remove('active');
+        socket.on('timerUpdate', (sec) => {
+            let m = Math.floor(sec / 60); let s = sec % 60;
+            document.getElementById('matchTimer').innerText = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
         });
-
-        // تحديث وعرض عداد دقيقتين للقيم بالثواني
-        socket.on('timerUpdate', (secondsLeft) => {
-            let mins = Math.floor(secondsLeft / 60);
-            let secs = secondsLeft % 60;
-            document.getElementById('matchTimer').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-        });
-
-        socket.on('timeOutEnd', () => {
-            runSoundLose();
-            openGameOverModal("⏱️ انتهى وقت الجيم!", "انقضت دقيقتان كاملتان دون حسم، نراكم في قيم آخر!");
-            myTurnActive = false;
-        });
-
-        socket.on('opponentDisconnected', () => {
-            alert("غادر الخصم أو انقطع اتصاله! سيتم توجيهك للوبي.");
-            document.getElementById('gameOverModal').classList.remove('active');
-            exitGameToLobby();
-        });
-
-        function exitGameToLobby() {
-            socket.emit('leaveRoom');
-            showLobbyDashboard();
-        }
-
-        // نظام الشات الجانبي المتطور مع الإشعارات الصوتية والوميض
-        function openChatSidebar() {
-            isChatOpen = true;
-            document.getElementById('chatSidebar').classList.add('open');
-            document.getElementById('chatBadge').style.display = 'none';
-        }
-        function closeChatSidebar() {
-            isChatOpen = false;
-            document.getElementById('chatSidebar').classList.remove('open');
-        }
-        function sendLiveMessage() {
-            let field = document.getElementById('chatInputField');
-            let txt = field.value.trim();
-            if(!txt) return;
-
-            socket.emit('sendChatMessage', { room: activeRoomId, message: txt });
-            let logs = document.getElementById('chatLogs');
-            logs.innerHTML += `<div><strong>أنت:</strong> ${txt}</div>`;
-            logs.scrollTop = logs.scrollHeight;
-            field.value = "";
-        }
-        socket.on('receiveChatMessage', (data) => {
-            let logs = document.getElementById('chatLogs');
-            logs.innerHTML += `<div><strong>${data.sender}:</strong> ${data.message}</div>`;
-            logs.scrollTop = logs.scrollHeight;
-            
-            if (!isChatOpen) {
-                runSoundChatAlert(); // إرسال صوت إشعار عند وصول رسالة جديدة والشات مغلق
-                document.getElementById('chatBadge').style.display = 'block'; // وميض الإشعار الأحمر
-            }
-        });
-
-        // أنظمة البحث، الصداقة، والتحكم بالحد الأقصى 50
-        function refreshSearchUsers() {
-            runSoundClick();
-            socket.emit('searchUsers');
-        }
-
-        socket.on('userListUpdate', (usersArray) => {
-            let area = document.getElementById('searchUsersArea');
-            area.innerHTML = "";
-            usersArray.forEach(u => {
-                if (u.id === socket.id) return;
-                let row = document.createElement('div');
-                row.className = "user-row";
-                row.innerHTML = `
-                    <div>${u.avatar} <strong>${u.name}</strong><br><small style="color:var(--text-muted)">${u.bio}</small></div>
-                    <button style="width:auto; font-size:11px; padding:6px 12px; margin:0;" onclick="sendFriendRequestToServer('${u.id}')">➕ إضافة</button>
-                `;
-                area.appendChild(row);
-            });
-        });
-
-        function sendFriendRequestToServer(id) {
-            runSoundClick();
-            socket.emit('sendFriendRequest', id);
-        }
-
-        socket.on('receiveFriendRequest', (data) => {
-            let acc = confirm(`وصلك طلب صداقة من اللاعب: ${data.fromName}. هل تود قبوله؟`);
-            if (acc) {
-                socket.emit('acceptFriend', data.fromId);
-            }
-        });
-
-        socket.on('notification', (data) => {
-            alert(data.message);
-        });
-
-        // عرض قائمة الأصدقاء الحاليين المضافين لديك
-        socket.on('updateProfile', (data) => {
-            let fArea = document.getElementById('friendsListArea');
-            fArea.innerHTML = "";
-            if (data.friends.length === 0) fArea.innerHTML = "<div style='color:var(--text-muted); font-size:13px;'>لا يوجد أصدقاء مضافين حالياً.</div>";
-            data.friends.forEach(f => {
-                let row = document.createElement('div');
-                row.className = "user-row";
-                row.innerHTML = `<div>${f.avatar || '👤'} <strong>${f.name}</strong></div><span style='color:green; font-size:12px;'>✓ صديق</span>`;
-                fArea.appendChild(row);
-            });
-        });
-
-        // متجر العملات والذهب والألماس المحاكي بالكامل وتغيير الأسماء
-        function buyDiamondsSimulate(amount, dollars) {
-            runSoundWin();
-            myAccount.diamonds += amount;
-            alert(`شكراً لك! تمت محاكاة عملية الشراء بنجاح بقيمة ${dollars}$ وحصلت على ${amount} ماسة 💎`);
-            socket.emit('registerUser', myAccount);
-        }
-
-        function convertDiamondsToGold(diamondsCost, goldReward) {
-            if (myAccount.diamonds < diamondsCost) return alert("ليس لديك ألماس كافي لإتمام هذه الصفقة!");
-            runSoundClick();
-            myAccount.diamonds -= diamondsCost;
-            myAccount.gold += goldReward;
-            socket.emit('registerUser', myAccount);
-            alert(`تم استبدال ${diamondsCost} ماسة بنجاح، وحصلت على ${goldReward} ذهب 🪙`);
-        }
-
-        function triggerNameChangeShop() {
-            let cost = (myAccount.nameChanges === 0) ? 0 : 100;
-            let confirmMsg = (cost === 0) ? "تغيير الاسم الأول لك مجاني بالكامل! هل تود الاستمرار؟" : `تغيير الاسم سيكلفك ${cost} ماسة 💎 من رصيدك الحالي، هل أنت موافق؟`;
-            
-            if (cost > 0 && myAccount.diamonds < cost) return alert("رصيدك من الألماس غير كافي لتغيير الاسم!");
-            
-            if (confirm(confirmMsg)) {
-                let newName = prompt("اكتب اسمك الجديد الفخم هنا (حد أقصى 12 حرف):");
-                if (!newName || !newName.trim()) return;
-                if (newName.trim().length > 12) return alert("الاسم طويل جداً!");
-
-                myAccount.diamonds -= cost;
-                myAccount.nameChanges += 1;
-                myAccount.name = newName.trim();
-                socket.emit('registerUser', myAccount);
-                alert("تم تحديث اسمك بنجاح في السيرفر وعلى بروفايلك!");
-            }
-        }
-
-        // نافذة الإعدادات العامة والوضع الليلي والنهاري
-        function openGlobalSettings() { runSoundClick(); document.getElementById('settingsModal').style.display = 'flex'; }
-        function closeGlobalSettings() { runSoundClick(); document.getElementById('settingsModal').style.display = 'none'; }
+        socket.on('timeOutEnd', () => { openGameOverModal("⏱️ انتهى الوقت!", "انتهت المدة!"); myTurnActive = false; });
         
-        function switchThemeMode() {
-            let currentTheme = document.documentElement.getAttribute('data-theme');
-            let nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', nextTheme);
-            localStorage.setItem('xo_platform_theme', nextTheme);
-            document.getElementById('themeToggleBtn').innerText = nextTheme === 'dark' ? '☀️ نهاري' : '🌙 ليلى';
-            playCleanTone(600, 0.05);
+        socket.on('opponentDisconnected', () => { 
+            alert("⚠️ الخصم انسحب أو غادر المباراة! سيتم توجيهك للرئيسية لمنع التعليق."); 
+            document.getElementById('gameOverModal').classList.remove('active');
+            exitGameToLobby(); 
+        });
+        
+        function exitGameToLobby() { socket.emit('leaveRoom'); activeRoomId = ""; switchLobbyTab('scrMenu'); }
+
+        function openEditProfileModal() {
+            document.getElementById('editNameInput').value = myAccount.name;
+            document.getElementById('editAvatarSelect').value = myAccount.avatar;
+            document.getElementById('editBioInput').value = myAccount.bio;
+            document.getElementById('editProfileModal').classList.add('active');
+        }
+        function closeEditProfileModal() { document.getElementById('editProfileModal').classList.remove('active'); }
+        
+        function saveProfileChangesOnline() {
+            let newName = document.getElementById('editNameInput').value.trim();
+            let chosenAvatar = document.getElementById('editAvatarSelect').value;
+            let chosenBio = document.getElementById('editBioInput').value.trim();
+            if(!newName) return alert("أدخل اسم اللاعب أولاً!");
+
+            if (newName.toLowerCase() !== myAccount.name.toLowerCase() && myAccount.diamonds < 100) {
+                return alert("❌ لا تملك مجوهرات كافية لتغيير الاسم! (تحتاج 100 جوهرة).");
+            }
+
+            socket.emit('updateBioAndAvatar', { name: newName, avatar: chosenAvatar, bio: chosenBio });
+            closeEditProfileModal();
         }
 
-        document.getElementById('volSlider').addEventListener('input', (e) => {
-            globalVolumeSetting = parseFloat(e.target.value);
-        });
+        function buyDiamondsSimulate(amt) { myAccount.diamonds += amt; socket.emit('registerUser', myAccount); alert("تم شحن الجواهر بنجاح!"); }
+        function openGlobalSettings() { document.getElementById('settingsModal').style.display = 'flex'; }
+        function closeGlobalSettings() { document.getElementById('settingsModal').style.display = 'none'; }
+        socket.on('notification', (data) => alert(data.message));
     </script>
 </body>
 </html>
