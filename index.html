@@ -3,141 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة X-O الأسطورية الاحترافية</title>
+    <title>منصة X-O التنافسية</title>
     <script src="/socket.io/socket.io.js"></script>
     <style>
         :root {
-            --bg-color: #f8fafc;
-            --card-bg: #ffffff;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --primary: #2563eb;
-            --primary-light: #eff6ff;
-            --accent-x: #ef4444;
-            --accent-o: #10b981;
-            --border: #e2e8f0;
+            --bg-color: #0b0f19; --card-bg: #151f32; --text-main: #f8fafc; --text-muted: #64748b;
+            --primary: #2563eb; --accent-x: #ef4444; --accent-o: #10b981; --border: #1e293b;
+            --online: #22c55e; --offline: #64748b;
         }
-        [data-theme="dark"] {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --primary: #3b82f6;
-            --primary-light: #1e3a8a;
-            --accent-x: #f87171;
-            --accent-o: #34d399;
-            --border: #334155;
-        }
-
-        body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background-color: var(--bg-color); color: var(--text-main);
-            margin: 0; padding: 0; display: flex; justify-content: center; align-items: center;
-            min-height: 100vh; transition: background-color 0.3s, color 0.3s;
-        }
-
-        .app-container {
-            width: 100%; max-width: 480px; background-color: var(--card-bg);
-            min-height: 100vh; display: flex; flex-direction: column; position: relative;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08); overflow: hidden; box-sizing: border-box;
-        }
-        @media (min-width: 500px) {
-            .app-container { min-height: 85vh; max-height: 92vh; border-radius: 24px; border: 1px solid var(--border); }
-        }
-
-        .currency-bar {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 15px 20px; border-bottom: 1px solid var(--border); background-color: var(--card-bg);
-        }
-        .currency-box { display: flex; gap: 12px; font-weight: bold; font-size: 14px; }
-        .currency-item { display: flex; align-items: center; gap: 5px; background: var(--bg-color); padding: 5px 12px; border-radius: 30px; }
-
-        .screen { display: none; flex: 1; padding: 20px; flex-direction: column; overflow-y: auto; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .app-container { width: 100%; max-width: 480px; background-color: var(--card-bg); min-height: 100vh; display: flex; flex-direction: column; position: relative; box-shadow: 0 12px 40px rgba(0,0,0,0.5); overflow: hidden; box-sizing: border-box; }
+        @media (min-width: 500px) { .app-container { min-height: 88vh; max-height: 95vh; border-radius: 20px; border: 1px solid var(--border); } }
+        .currency-bar { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; border-bottom: 1px solid var(--border); }
+        .currency-box { display: flex; gap: 10px; font-weight: bold; font-size: 13px; }
+        .currency-item { display: flex; align-items: center; gap: 4px; background: var(--bg-color); padding: 4px 10px; border-radius: 20px; }
+        .screen { display: none; flex: 1; padding: 18px; flex-direction: column; overflow-y: auto; box-sizing: border-box; }
         .screen.active { display: flex; }
-
-        h1, h2, h3 { text-align: center; margin: 10px 0 15px; font-size: 18px; }
-        label { font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; display: block; }
-
-        input, select, textarea {
-            width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 12px;
-            background-color: var(--bg-color); color: var(--text-main); font-size: 14px;
-            box-sizing: border-box; margin-bottom: 15px; outline: none;
-        }
-
-        button {
-            width: 100%; padding: 13px; border: none; border-radius: 12px;
-            font-size: 14px; font-weight: bold; cursor: pointer;
-            background-color: var(--primary); color: white; transition: all 0.2s ease;
-            margin-bottom: 10px; display: flex; justify-content: center; align-items: center; gap: 6px;
-        }
+        input, select, textarea { width: 100%; padding: 11px; border: 1px solid var(--border); border-radius: 10px; background-color: var(--bg-color); color: var(--text-main); font-size: 13px; box-sizing: border-box; margin-bottom: 12px; outline: none; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 10px; font-size: 13px; font-weight: bold; cursor: pointer; background-color: var(--primary); color: white; transition: all 0.2s ease; margin-bottom: 8px; display: flex; justify-content: center; align-items: center; gap: 5px; }
         button:hover { opacity: 0.9; }
-        .btn-sec { background-color: var(--text-muted); }
-        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
-        .btn-danger { background-color: var(--accent-x); }
+        .btn-sec { background-color: #475569; } .btn-danger { background-color: var(--accent-x); } .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
         .btn-sm { padding: 5px 10px; font-size: 11px; width: auto; display: inline-flex; margin: 0; }
-
-        .profile-card { background: var(--bg-color); padding: 15px; border-radius: 20px; text-align: center; margin-bottom: 15px; border: 1px solid var(--border); }
-        .avatar-view { font-size: 50px; margin-bottom: 5px; cursor: pointer; }
+        .section-block { background: var(--bg-color); padding: 14px; border-radius: 14px; margin-bottom: 15px; border: 1px solid var(--border); }
+        .block-title { font-size: 13px; font-weight: bold; color: #38bdf8; margin-top: 0; margin-bottom: 10px; text-align: right; }
+        .profile-card { background: var(--bg-color); padding: 15px; border-radius: 16px; text-align: center; border: 1px solid var(--border); }
         .history-dots { display: flex; justify-content: center; gap: 6px; margin-top: 10px; }
-        .dot { padding: 3px 7px; font-size: 9px; border-radius: 5px; color: white; font-weight: bold; }
-        .dot.فوز { background-color: var(--accent-o); }
-        .dot.خسارة { background-color: var(--accent-x); }
-        .dot.تعادل { background-color: var(--text-muted); }
-
-        .volume-container { display: flex; align-items: center; width: 100%; margin: 10px 0; }
-        .volume-container input[type="range"] {
-            -webkit-appearance: none; width: 100%; height: 10px; border-radius: 6px;
-            background: var(--primary); outline: none; margin: 0; padding: 0; cursor: pointer;
-        }
-        .volume-container input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none; appearance: none; width: 20px; height: 20px;
-            border-radius: 50%; background: #ffffff; border: 3px solid var(--primary); cursor: pointer;
-        }
-
-        .game-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; max-width: 300px; margin: 15px auto; }
-        .cell {
-            aspect-ratio: 1; background-color: var(--bg-color); border: 2px solid var(--border);
-            border-radius: 16px; font-size: 36px; display: flex; justify-content: center; align-items: center; cursor: pointer; user-select: none;
-        }
-        .cell.X { color: var(--accent-x); font-weight: bold; }
-        .cell.O { color: var(--accent-o); font-weight: bold; }
-
-        .chat-toggle-btn {
-            position: absolute; bottom: 85px; left: 20px; width: 52px; height: 52px;
-            border-radius: 50%; background: var(--primary); color: white; font-size: 22px;
-            display: flex; justify-content: center; align-items: center; cursor: pointer; z-index: 99;
-        }
-        .badge { position: absolute; top: 2px; right: 28%; background: red; color: white; font-size: 10px; font-weight: bold; width: 16px; height: 16px; border-radius: 50%; display: flex; justify-content: center; align-items: center; }
-
-        .chat-sidebar {
-            position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
-            background: var(--card-bg); z-index: 100; transition: left 0.3s ease;
-            display: flex; flex-direction: column; box-sizing: border-box;
-        }
-        .chat-sidebar.open { left: 0; }
-        .chat-header { padding: 15px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--bg-color); }
-        .chat-logs { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
-        .chat-msg { background: var(--bg-color); padding: 10px 14px; border-radius: 12px; max-width: 85%; font-size: 13px; }
-        .chat-msg.me { background: var(--primary); color: white; align-self: flex-start; }
-        .chat-msg.other { align-self: flex-end; background: var(--border); }
-        .chat-input-bar { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--border); }
-        .chat-input-bar input { margin: 0; }
-
-        .user-row {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 12px; border-bottom: 1px solid var(--border); background: var(--card-bg); margin-bottom: 5px; border-radius: 12px;
-        }
-
-        .game-over-modal {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); z-index: 200; display: none; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
-        }
-        .game-over-modal.active { display: flex; }
-        .modal-content { background: var(--card-bg); width: 100%; padding: 20px; border-radius: 20px; text-align: center; }
-
-        .tabs { display: flex; border-top: 1px solid var(--border); background: var(--card-bg); position: relative; }
-        .tab-item { flex: 1; padding: 15px; text-align: center; cursor: pointer; font-size: 13px; font-weight: bold; color: var(--text-muted); position: relative; }
-        .tab-item.active { color: var(--primary); border-top: 3px solid var(--primary); background: var(--primary-light); }
+        .dot { padding: 2px 7px; font-size: 10px; border-radius: 5px; color: white; font-weight: bold; }
+        .dot.فوز { background-color: var(--accent-o); } .dot.خسارة { background-color: var(--accent-x); } .dot.تعادل { background-color: var(--text-muted); }
+        .game-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; max-width: 280px; margin: 12px auto; }
+        .cell { aspect-ratio: 1; background-color: var(--bg-color); border: 2px solid var(--border); border-radius: 12px; font-size: 32px; display: flex; justify-content: center; align-items: center; cursor: pointer; user-select: none; }
+        .cell.X { color: var(--accent-x); font-weight: bold; } .cell.O { color: var(--accent-o); font-weight: bold; }
+        .user-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid var(--border); background: var(--bg-color); margin-bottom: 6px; border-radius: 10px; }
+        .status-indicator { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-left: 6px; }
+        .status-online { background-color: var(--online); } .status-offline { background-color: var(--offline); }
+        .leaderboard-table { width: 100%; border-collapse: collapse; }
+        .leaderboard-table th, .leaderboard-table td { padding: 8px; text-align: center; border-bottom: 1px solid var(--border); font-size: 12px; }
+        .leaderboard-table th { background: #1e293b; color: white; }
+        .popup-modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999; display: none; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
+        .popup-modal.active { display: flex; }
+        .popup-content { background: var(--card-bg); width: 100%; max-width: 360px; padding: 20px; border-radius: 16px; text-align: center; border: 1px solid var(--border); }
+        .opponent-wrapper { position: relative; display: inline-block; cursor: pointer; }
+        .opponent-tooltip { display: none; position: absolute; top: 110%; left: 50%; transform: translateX(-50%); background: #1e293b; border: 1px solid var(--primary); padding: 12px; border-radius: 8px; width: 180px; z-index: 100; text-align: right; }
+        .opponent-wrapper:hover .opponent-tooltip { display: block; }
+        .chat-layout { display: flex; flex-direction: column; flex: 1; height: 100%; }
+        .chat-messages { flex: 1; background: var(--bg-color); border-radius: 12px; padding: 10px; overflow-y: auto; margin-bottom: 10px; border: 1px solid var(--border); }
+        .msg-bubble { margin-bottom: 8px; padding: 6px 10px; border-radius: 8px; max-width: 80%; font-size: 12px; }
+        .msg-mine { background: var(--primary); margin-right: auto; text-align: left; } .msg-other { background: #334155; margin-left: auto; text-align: right; }
+        .tabs { display: flex; border-top: 1px solid var(--border); background: var(--card-bg); }
+        .tab-item { flex: 1; padding: 12px 2px; text-align: center; cursor: pointer; font-size: 11px; font-weight: bold; color: var(--text-muted); }
+        .tab-item.active { color: white; background: var(--primary); }
     </style>
 </head>
 <body>
@@ -149,527 +63,399 @@
                 <div class="currency-item">💎 <span id="diamondCount">0</span></div>
                 <div class="currency-item">🪙 <span id="goldCount">0</span></div>
             </div>
-            <button onclick="openGlobalSettings()" style="width:auto; background:none; color:var(--text-main); font-size:20px; padding:0; margin:0;">⚙️</button>
+            <div style="font-size:12px; color:var(--text-muted)">المعرف: <span id="myAccountIDText" style="color:white; font-weight:bold;">-</span></div>
         </div>
 
         <div class="screen" id="scrRegister">
-            <h1>إنشاء حساب أسطوري</h1>
-            <label>اختر الأفتار المفضل:</label>
-            <select id="regAvatar">
-                <option value="🥷">🥷 نينجا</option>
-                <option value="🦁">🦁 أسد</option>
-                <option value="👑">👑 ملك</option>
-                <option value="🦊">🦊 ثعلب</option>
-            </select>
-            <label>اسم اللاعب الثابت (لن يتكرر):</label>
-            <input type="text" id="regName" placeholder="اكتب اسمك المميز هنا..." maxlength="12">
-            <label>وصف ملفك الشخصي:</label>
-            <textarea id="regBio" placeholder="جاهز للتحدي وسحق المنافسين..." rows="2" maxlength="40"></textarea>
-            <button onclick="submitRegistration()">ابدأ اللعب الآن</button>
+            <h2 style="text-align:center;">👤 إنشاء الحساب التنافسي</h2>
+            <label>اختر الأفتار الشخصي:</label>
+            <select id="regAvatar"><option value="🥷">🥷 نينجا</option><option value="🦁">🦁 أسد</option><option value="👑">👑 ملك</option></select>
+            <label>اسم اللاعب:</label>
+            <input type="text" id="regName" placeholder="اكتب اسمك المستعار...">
+            <label>وصف البروفايل (البيو):</label>
+            <textarea id="regBio" placeholder="اكتب عبارة قوية لتظهر للجميع..." rows="2"></textarea>
+            <button onclick="submitRegistration()">دخول الساحة</button>
         </div>
 
         <div class="screen" id="scrMenu">
-            <div class="profile-card">
-                <div class="avatar-view" id="profAvatar" onclick="openEditProfileModal()">🥷</div>
-                <h2 id="profName" style="margin:2px 0;">-</h2>
-                <p id="profBio" style="font-size:12px; color:var(--text-muted); margin:4px 0;">-</p>
-                <div class="history-dots" id="profHistory"></div>
-                <button class="btn-outline btn-sm" style="margin-top:8px;" onclick="openEditProfileModal()">📝 تغيير الاسم والبيانات (💎100)</button>
-            </div>
-            <button onclick="startRandomMatch()">⚔️ بدء لعب عشوائي فوري</button>
-            <button class="btn-sec" onclick="showScreen('scrCustomRoom')">🏠 إنشاء روم خاص للأصدقاء</button>
+            <h2 style="text-align:center; color:var(--primary);">⚔️ ساحة معارك X-O التنافسية</h2>
+            <br>
+            <button style="padding:16px; font-size:15px;" onclick="startRandomMatch()">⚡ بدء بحث عشوائي (زيادة سكور تصنيفي)</button>
+            <div style="margin: 20px 0; text-align:center; color:var(--text-muted); font-size:12px;">مواجهة الأصدقاء الخاصة والغرف المخصصة</div>
+            <button class="btn-sec" onclick="showScreen('scrCustomRoom')">🏠 إنشاء غرفة لعب مخصصة (ودية)</button>
         </div>
 
         <div class="screen" id="scrCustomRoom">
-            <h1>إنشاء أو دخول روم خاص</h1>
-            <input type="text" id="customRoomCode" placeholder="أدخل رقم أو اسم الروم...">
-            <button onclick="joinCustomRoomCode()">دخول الروم</button>
-            
-            <div id="roomInviteSection" style="display:none; margin-top:15px; background:var(--bg-color); padding:10px; border-radius:12px;">
-                <p style="font-size:12px; margin:0 0 8px; font-weight:bold;">✉️ إرسال دعوة سريعة لأصدقائك:</p>
+            <h2>غرفة لعب مخصصة</h2>
+            <input type="text" id="customRoomCode" placeholder="اكتب كود أو اسم الروم هنا...">
+            <button onclick="joinCustomRoomCode()">تفعيل ودخول الروم</button>
+            <div id="roomInviteSection" style="display:none; margin-top:15px;" class="section-block">
+                <div class="block-title">📬 أرسل دعوة سريعة لأصدقائك الحاليين:</div>
                 <div id="inviteFriendsContainer"></div>
             </div>
-            <button class="btn-outline" style="margin-top:15px;" onclick="goBackToLobby()">⬅️ العودة للرئيسية</button>
+            <button class="btn-outline" style="margin-top:10px;" onclick="goBackToLobby()">⬅️ عودة للخلف</button>
         </div>
 
         <div class="screen" id="scrFriends">
-            <h3 style="text-align:right; font-size:14px; color:var(--accent-x);">📬 طلبات صداقة بانتظار قبولك:</h3>
-            <div id="pendingRequestsArea" style="background:var(--primary-light); border-radius:12px; padding:5px; margin-bottom:15px; min-height:40px;"></div>
+            <div class="section-block">
+                <div class="block-title">🔍 البحث الدقيق بالـ ID (8 أرقام كاملة) وطلبات الصداقة</div>
+                <input type="text" id="friendSearchInput" oninput="filterSearchUsersList()" placeholder="اكتب الـ ID المكون من 8 أرقام بالكامل للاعب...">
+                <div id="searchUsersArea"></div>
+                <div style="margin-top:10px; font-size:11px; font-weight:bold; color:var(--accent-o);">📬 طلبات الصداقة المعلقة:</div>
+                <div id="pendingRequestsArea" style="margin-top:5px;"></div>
+            </div>
 
-            <h3 style="text-align:right; font-size:14px;">👥 أصدقائي الحاليين (<span id="friendCountText">0</span>/50):</h3>
-            <div id="friendsListArea" style="min-height:60px; margin-bottom:15px; max-height:180px; overflow-y:auto;"></div>
-            
-            <h3 style="text-align:right; font-size:14px;">🔍 ابحث عن لاعبين متاحين بالاسم:</h3>
-            <input type="text" id="friendSearchInput" oninput="filterSearchUsersList()" placeholder="اكتب اسم اللاعب هنا للبحث الفوري...">
-            <div id="searchUsersArea" style="flex:1; overflow-y:auto;"></div>
+            <div class="section-block">
+                <div class="block-title">👥 قائمة أصدقائي الحاليين وحالة اتصالهم الفورية (<span id="friendCountLabel">0</span>/50)</div>
+                <div id="myActualFriendsListArea"></div>
+            </div>
+
+            <div class="section-block">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <div class="block-title" style="margin: 0;">🎲 لاعبين عشوائيين لتتعرف عليهم</div>
+                    <button class="btn-sm" style="background:#0284c7; margin: 0;" onclick="refreshRandomPlayersList()">🔄 تحديث القائمة</button>
+                </div>
+                <div id="randomPlayersContainer"></div>
+            </div>
         </div>
 
-        <div class="screen" id="scrShop">
-            <h1>متجر الجواهر والذهب</h1>
-            <div style="background:var(--bg-color); padding:15px; border-radius:15px; text-align:center;">
-                <h3>شحن مجوهرات محاكاة 💎</h3>
-                <button class="btn-sm" onclick="buyDiamondsSimulate(500)">شحن 500 جـوهرة 💎</button>
+        <div class="screen" id="scrProfile">
+            <h2>الملف الشخصي الخاص بك</h2>
+            <div class="profile-card">
+                <div style="font-size:50px;" id="pCardAvatar">🥷</div>
+                <h3 id="pCardName" style="margin:5px 0;">-</h3>
+                <div style="font-size:12px; color:var(--primary); font-weight:bold;">ID: <span id="pCardID">-</span></div>
+                <p id="pCardBio" style="font-size:12px; color:var(--text-muted); margin:5px 0;">-</p>
+                <div style="background:var(--card-bg); padding:8px; border-radius:8px; margin-top:10px; border:1px solid var(--border);">
+                    <div style="font-size:13px; font-weight:bold; color:var(--accent-o);">رتبتك الحالية: <span id="pCardRank">-</span></div>
+                    <div style="font-size:11px; color:var(--text-muted);">مجموع السكور: <span id="pCardScore" style="color:white; font-weight:bold;">0</span></div>
+                </div>
+                <div class="history-dots" id="pCardHistory"></div>
+            </div>
+        </div>
+
+        <div class="screen" id="scrScoreboard">
+            <h2>🏆 لوحة الصدارة العالمية (أعلى 100)</h2>
+            <div style="flex:1; overflow-y:auto; background:var(--bg-color); border:1px solid var(--border); border-radius:10px;">
+                <table class="leaderboard-table">
+                    <thead><tr><th>#</th><th>اللاعب</th><th>السكور</th><th>البروفايل</th></tr></thead>
+                    <tbody id="leaderboardRowsContainer"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="screen" id="scrChatsTab">
+            <h2>💬 غرف المحادثات الفورية للأصدقاء</h2>
+            <div style="display:flex; gap:8px; margin-bottom:10px;">
+                <select id="chatFriendSelect" onchange="loadPrivateChatWithSelectedFriend()" style="margin:0; flex:1;">
+                    <option value="">-- اختر صديقاً لبدء شات خاص معه --</option>
+                </select>
+            </div>
+            <div class="chat-layout" id="privateChatBlockArea" style="display:none;">
+                <div class="chat-messages" id="privateChatMsgContainer"></div>
+                <div style="display:flex; gap:5px;">
+                    <input type="text" id="privateChatInputField" placeholder="اكتب رسالة خاصة الآن..." style="margin:0; flex:1;">
+                    <button class="btn-sm" style="width:70px;" onclick="sendPrivateChatMessageToServer()">إرسال</button>
+                </div>
             </div>
         </div>
 
         <div class="screen" id="scrGame">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <div style="font-size:12px;"><span id="p1Name">-</span> <span id="p1Symbol"></span></div>
-                <div style="font-weight:bold; color:var(--primary)" id="matchTimer">02:00</div>
-                <div style="font-size:12px;"><span id="p2Name">-</span> <span id="p2Symbol"></span></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-color); padding:10px; border-radius:10px; border:1px solid var(--border);">
+                <div><span id="p1Name" style="font-weight:bold; color:white;">-</span> <span style="font-size:11px; color:var(--accent-o);" id="p1ScoreLabel"></span></div>
+                <div style="font-weight:bold; color:var(--accent-x);" id="matchTimer">02:00</div>
+                <div class="opponent-wrapper">
+                    <span id="p2Name" style="font-weight:bold; color:#38bdf8;">-</span> <span style="font-size:11px; color:var(--accent-o);" id="p2ScoreLabel"></span>
+                    <div class="opponent-tooltip" id="oppHoverTooltip">
+                        <div id="oppHoverBio" style="font-size:11px; color:white; margin-bottom:8px;">الوصف: لا يوجد وصف</div>
+                        <button class="btn-sm" style="width:100%;" id="oppHoverAddBtn">➕ إضافة كصديق</button>
+                    </div>
+                </div>
             </div>
-            <div id="gameTurnStatus" style="text-align:center; font-weight:bold; margin:10px 0;">جاري التهيئة...</div>
-
+            <div id="gameTurnStatus" style="text-align:center; font-size:12px; margin:10px 0; font-weight:bold;">جاري التحضير...</div>
             <div class="game-grid">
-                <div class="cell" id="c0" onclick="sendCellClick(0)"></div>
-                <div class="cell" id="c1" onclick="sendCellClick(1)"></div>
-                <div class="cell" id="c2" onclick="sendCellClick(2)"></div>
-                <div class="cell" id="c3" onclick="sendCellClick(3)"></div>
-                <div class="cell" id="c4" onclick="sendCellClick(4)"></div>
-                <div class="cell" id="c5" onclick="sendCellClick(5)"></div>
-                <div class="cell" id="c6" onclick="sendCellClick(6)"></div>
-                <div class="cell" id="c7" onclick="sendCellClick(7)"></div>
-                <div class="cell" id="c8" onclick="sendCellClick(8)"></div>
+                <div class="cell" id="c0" onclick="sendCellClick(0)"></div><div class="cell" id="c1" onclick="sendCellClick(1)"></div><div class="cell" id="c2" onclick="sendCellClick(2)"></div>
+                <div class="cell" id="c3" onclick="sendCellClick(3)"></div><div class="cell" id="c4" onclick="sendCellClick(4)"></div><div class="cell" id="c5" onclick="sendCellClick(5)"></div>
+                <div class="cell" id="c6" onclick="sendCellClick(6)"></div><div class="cell" id="c7" onclick="sendCellClick(7)"></div><div class="cell" id="c8" onclick="sendCellClick(8)"></div>
             </div>
-            <button class="btn-danger" style="margin-top:15px;" onclick="exitGameToLobby()">🚪 انسحاب استسلام</button>
+            <div class="section-block" style="padding:8px; margin-top:5px; background:rgba(0,0,0,0.2);">
+                <div id="gameChatAreaMessages" style="height:60px; overflow-y:auto; font-size:11px; background:var(--bg-color); padding:5px; border-radius:6px; margin-bottom:5px;"></div>
+                <div style="display:flex; gap:4px;">
+                    <input type="text" id="gameChatInputField" placeholder="اكتب للخصم..." style="margin:0; padding:6px; font-size:11px; flex:1;">
+                    <button class="btn-sm" style="margin:0; padding:6px;" onclick="sendInGameChat()">ارسل</button>
+                </div>
+            </div>
+            <button class="btn-danger btn-sm" style="width:100%; margin-top:8px;" onclick="resignCurrentGame()">🏳️ انسحاب</button>
         </div>
 
         <div class="screen" id="scrWaiting">
-            <h2 id="waitText">⏳ بانتظار دخول الخصم...</h2>
-            <button class="btn-danger" onclick="exitGameToLobby()">إلغاء والعودة</button>
+            <h3 style="text-align:center; margin-top:60px;" id="waitText">⏳ بانتظار الخصم...</h3>
+            <p style="text-align:center; font-size:12px; color:var(--text-muted);">يتم الآن البحث في الخوادم العالمية عن لاعب منافس لك</p>
+            <br><button class="btn-danger" onclick="exitGameToLobby()">إلغاء البحث والعودة للرادار</button>
         </div>
 
         <div class="tabs" id="lobbyTabs" style="display:none;">
-            <div class="tab-item active" id="tabMenu" onclick="switchLobbyTab('scrMenu')">⚔️ ساحة اللعب</div>
-            <div class="tab-item" id="tabFriends" onclick="switchLobbyTab('scrFriends')">
-                👥 الأصدقاء
-                <div class="badge" id="requestsCountBadge" style="display:none;">0</div>
-            </div>
-            <div class="tab-item" id="tabShop" onclick="switchLobbyTab('scrShop')">🛒 المتجر</div>
+            <div class="tab-item active" id="tabMenu" onclick="switchLobbyTab('scrMenu')">⚔️ رادار اللعب</div>
+            <div class="tab-item" id="tabFriends" onclick="switchLobbyTab('scrFriends')">👥 الأصدقاء</div>
+            <div class="tab-item" id="tabProfile" onclick="switchLobbyTab('scrProfile')">👤 البروفايل</div>
+            <div class="tab-item" id="tabScoreboard" onclick="switchLobbyTab('scrScoreboard')">🏆 السكور</div>
+            <div class="tab-item" id="tabChatsTab" onclick="switchLobbyTab('scrChatsTab')">💬 المحادثات</div>
         </div>
 
-        <div class="chat-toggle-btn" id="chatToggleBtn" style="display:none;" onclick="openChatSidebar()">💬</div>
-
-        <div class="chat-sidebar" id="chatSidebar">
-            <div class="chat-header"><h3>شات المباراة المباشر</h3><button class="btn-sec btn-sm" onclick="closeChatSidebar()">إغلاق</button></div>
-            <div class="chat-logs" id="chatLogs"></div>
-            <div class="chat-input-bar"><input type="text" id="chatInputField" placeholder="اكتب للخصم..."><button class="btn-sm" onclick="sendLiveMessage()">إرسال</button></div>
-        </div>
-
-        <div class="chat-sidebar" id="privateChatSidebar">
-            <div class="chat-header"><h3>محادثة خاصة: <span id="privateChatPartnerName">-</span></h3><button class="btn-sec btn-sm" onclick="closePrivateChatSidebar()">عودة</button></div>
-            <div class="chat-logs" id="privateChatLogs"></div>
-            <div class="chat-input-bar"><input type="text" id="privateChatInputField" placeholder="اكتب رسالة خاصة وسرية..."><button class="btn-sm" onclick="sendPrivateMessageToServer()">إرسال</button></div>
-        </div>
-
-        <div class="game-over-modal" id="gameOverModal">
-            <div class="modal-content"><h1 id="gameOverTitle">-</h1><p id="gameOverBody">-</p><button onclick="triggerRematchRequest()">🔄 طلب جولة انتقامية ثانية</button><button class="btn-sec" onclick="closeModalCompletelyAndGoLobby()">🏠 القائمة الرئيسية</button></div>
-        </div>
-
-        <div class="game-over-modal" id="editProfileModal">
-            <div class="modal-content" style="text-align:right;">
-                <h2>تعديل بطاقتك التعريفية (تغيير الاسم بـ 💎100)</h2>
-                <label>تحديث الاسم باللعبة:</label>
-                <input type="text" id="editNameInput" maxlength="12">
-                <label>تحديث الأفتار الشخصي:</label>
-                <select id="editAvatarSelect"><option value="🥷">🥷 نينجا</option><option value="🦁">🦁 أسد</option><option value="👑">👑 ملك</option><option value="🦊">🦊 ثعلب</option></select>
-                <label>تعديل الوصف (البيو):</label>
-                <input type="text" id="editBioInput" maxlength="40">
-                <button onclick="saveProfileChangesOnline()">حفظ التحديثات فوراً</button>
-                <button class="btn-sec" onclick="closeEditProfileModal()">إلغاء</button>
-            </div>
-        </div>
-
-        <div class="game-over-modal" id="settingsModal">
-            <div class="modal-content" style="text-align:right;">
-                <h2>إعدادات المنصة العامة</h2>
-                
-                <label>مظهر واجهة المنصة الداكن/الفاتح:</label>
-                <select id="themeSelector" onchange="changeAppThemeViaSelector()">
-                    <option value="dark">🌙 الوضع الليلي (Dark Mode)</option>
-                    <option value="light">☀️ الوضع النهاري (Light Mode)</option>
-                </select>
-
-                <label>مستوى التحكم بالصوت:</label>
-                <div class="volume-container">
-                    <input type="range" id="volSlider" min="0" max="1" step="0.01" value="0.5">
-                </div>
-                <button class="btn-sec" style="margin-top:15px;" onclick="closeGlobalSettings()">إغلاق وحفظ</button>
-            </div>
-        </div>
+        <div class="popup-modal" id="otherPlayerProfilePopupModal"><div class="popup-content"><h3 style="color:var(--primary); margin-top:0;" id="oppPopupTitle">👤 بطاقة معلومات المنافس</h3><div id="oppPopupBodyDetails" style="text-align:right; font-size:13px; line-height:1.6; margin:15px 0; background:var(--bg-color); padding:12px; border-radius:10px;"></div><button class="btn-sec" style="width:100%;" onclick="closeOtherPlayerProfilePopup()">إغلاق النافذة</button></div></div>
+        <div class="popup-modal" id="roomInvitePopupModal"><div class="popup-content"><h3 style="color:var(--accent-o); margin-top:0;">✉️ دعوة لغرفة مخصصة</h3><p id="roomInvitePopupText" style="font-size:13px; margin:15px 0;"></p><div style="display:flex; gap:8px;"><button id="btnAcceptRoomInvite" style="background-color:var(--accent-o);">تأكيد</button><button class="btn-sec" id="btnRejectRoomInvite">رفض</button></div></div></div>
+        <div class="popup-modal" id="gameOverModal"><div class="popup-content"><h2 id="gameOverTitle">-</h2><p id="gameOverBody">-</p><button class="btn-sec" style="width:100%;" onclick="closeModalCompletelyAndGoLobby()">عودة للرادار</button></div></div>
 
     </div>
 
     <script>
         const socket = io();
-        let myAccount = { name: "", avatar: "🥷", bio: "", gold: 1000, diamonds: 150, friends: [], friendRequests: [], history: [] };
-        let allGlobalUsers = [];
-        let activeRoomId = "";
-        let currentSymbol = "";
-        let myTurnActive = false;
-        let currentActivePrivateChatFriendId = "";
+        let myAccount = { userId: "", name: "", avatar: "🥷", bio: "", gold: 1000, diamonds: 150, score: 10, friends: [], friendRequests: [], history: [] };
+        let allGlobalUsers = []; let activeRoomId = ""; let currentSymbol = ""; let myTurnActive = false; let selectedChatFriendId = "";
+        let opponentUserIdInMatch = "";
 
         window.onload = () => {
-            let savedTheme = localStorage.getItem('xo_theme') || 'dark';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-            document.getElementById('themeSelector').value = savedTheme;
-
-            let localData = localStorage.getItem('xo_account_v3');
-            if (localData) {
-                myAccount = JSON.parse(localData);
-                socket.emit('registerUser', myAccount);
-            } else {
-                showScreen('scrRegister');
-            }
+            let localData = localStorage.getItem('xo_competitive_account_v5');
+            if (localData) { myAccount = JSON.parse(localData); socket.emit('registerUser', myAccount); } else { showScreen('scrRegister'); }
         };
-
-        function changeAppThemeViaSelector() {
-            let selectedTheme = document.getElementById('themeSelector').value;
-            document.documentElement.setAttribute('data-theme', selectedTheme);
-            localStorage.setItem('xo_theme', selectedTheme);
-        }
 
         function showScreen(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
-            let isLobby = ['scrMenu', 'scrFriends', 'scrShop', 'scrCustomRoom'].includes(id);
+            let isLobby = ['scrMenu', 'scrFriends', 'scrProfile', 'scrScoreboard', 'scrCustomRoom', 'scrChatsTab'].includes(id);
             document.getElementById('topCurrencyBar').style.display = isLobby ? 'flex' : 'none';
             document.getElementById('lobbyTabs').style.display = isLobby ? 'flex' : 'none';
-            
-            if (id === 'scrGame') {
-                document.getElementById('chatToggleBtn').style.display = 'flex';
-            } else {
-                document.getElementById('chatToggleBtn').style.display = 'none';
-                closeChatSidebar();
-            }
-
-            if (id === 'scrCustomRoom' && activeRoomId) {
-                document.getElementById('roomInviteSection').style.display = 'block';
-                renderInviteFriendsList();
-            }
         }
 
         function switchLobbyTab(tabId) {
             document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-            if (tabId === 'scrMenu') document.getElementById('tabMenu').classList.add('active');
-            if (tabId === 'scrFriends') {
-                document.getElementById('tabFriends').classList.add('active');
-                socket.emit('searchUsers');
-            }
-            if (tabId === 'scrShop') document.getElementById('tabShop').classList.add('active');
-            showScreen(tabId);
+            const tabBtn = document.getElementById('tab' + tabId.charAt(3).toUpperCase() + tabId.slice(4));
+            if (tabBtn) tabBtn.classList.add('active');
+            socket.emit('searchUsers'); showScreen(tabId);
         }
 
         function submitRegistration() {
-            let name = document.getElementById('regName').value.trim();
-            if (!name) return alert("الرجاء إدخال الاسم أولاً!");
-            myAccount.name = name;
-            myAccount.avatar = document.getElementById('regAvatar').value;
-            myAccount.bio = document.getElementById('regBio').value.trim();
+            let name = document.getElementById('regName').value.trim(); if (!name) return alert("يرجى كتابة الاسم الشخصي للبدء!");
+            myAccount.name = name; myAccount.avatar = document.getElementById('regAvatar').value; myAccount.bio = document.getElementById('regBio').value.trim();
             socket.emit('registerUser', myAccount);
         }
 
         socket.on('updateProfile', (updatedData) => {
-            myAccount = updatedData;
-            localStorage.setItem('xo_account_v3', JSON.stringify(myAccount));
-            
-            document.getElementById('diamondCount').innerText = myAccount.diamonds;
-            document.getElementById('goldCount').innerText = myAccount.gold;
-            document.getElementById('profName').innerText = myAccount.name;
-            document.getElementById('profAvatar').innerText = myAccount.avatar;
-            document.getElementById('profBio').innerText = myAccount.bio;
-            document.getElementById('friendCountText').innerText = myAccount.friends.length;
+            myAccount = updatedData; localStorage.setItem('xo_competitive_account_v5', JSON.stringify(myAccount));
+            document.getElementById('diamondCount').innerText = myAccount.diamonds; document.getElementById('goldCount').innerText = myAccount.gold; document.getElementById('myAccountIDText').innerText = myAccount.userId;
+            document.getElementById('pCardName').innerText = myAccount.name; document.getElementById('pCardAvatar').innerText = myAccount.avatar; document.getElementById('pCardID').innerText = myAccount.userId;
+            document.getElementById('pCardBio').innerText = myAccount.bio || "لا يوجد وصف"; document.getElementById('pCardRank').innerText = myAccount.rank || "برونز 3"; document.getElementById('pCardScore').innerText = myAccount.score;
+            document.getElementById('friendCountLabel').innerText = (myAccount.friends || []).length;
 
-            let badge = document.getElementById('requestsCountBadge');
-            if (myAccount.friendRequests && myAccount.friendRequests.length > 0) {
-                badge.style.display = "flex";
-                badge.innerText = myAccount.friendRequests.length;
-            } else {
-                badge.style.display = "none";
+            let histArea = document.getElementById('pCardHistory'); histArea.innerHTML = "";
+            if (myAccount.history && myAccount.history.length > 0) {
+                myAccount.history.forEach(res => { let s = document.createElement('span'); s.className = `dot ${res}`; s.innerText = res; histArea.appendChild(s); });
             }
 
-            let pendingArea = document.getElementById('pendingRequestsArea');
-            pendingArea.innerHTML = "";
+            let chatSelect = document.getElementById('chatFriendSelect'); let currentSelVal = chatSelect.value;
+            chatSelect.innerHTML = '<option value="">-- اختر صديقاً لبدء شات خاص معه --</option>';
+            (myAccount.friends || []).forEach(f => { let opt = document.createElement('option'); opt.value = f.userId; opt.innerText = f.name; chatSelect.appendChild(opt); });
+            chatSelect.value = currentSelVal;
+
+            let pendingArea = document.getElementById('pendingRequestsArea'); pendingArea.innerHTML = "";
             if (!myAccount.friendRequests || myAccount.friendRequests.length === 0) {
-                pendingArea.innerHTML = "<div style='color:var(--text-muted); font-size:11px; text-align:center; padding:5px;'>لا توجد طلبات صداقة واردة حالياً.</div>";
+                pendingArea.innerHTML = "<div style='color:var(--text-muted); font-size:11px;'>لا توجد طلبات واردة.</div>";
             } else {
                 myAccount.friendRequests.forEach(req => {
-                    let div = document.createElement('div');
-                    div.style = "display:flex; justify-content:space-between; align-items:center; padding:6px; border-bottom:1px solid var(--border);";
+                    let div = document.createElement('div'); div.className = "user-row";
                     div.innerHTML = `
-                        <div style="font-size:12px;">${req.avatar} <strong>${req.name}</strong></div>
-                        <div style="display:flex; gap:4px;">
-                            <button class="btn-sm" style="background:var(--accent-o);" onclick="acceptFriendRequest('${req.id}')">قبول</button>
-                            <button class="btn-sm btn-danger" onclick="rejectFriendRequest('${req.id}')">رفض</button>
+                        <div style="font-size:11px;">${req.avatar} <b>${req.name}</b></div>
+                        <div>
+                            <button class="btn-sm" style="background:var(--accent-o); margin-left:4px;" onclick="acceptFriend('${req.userId}')">قبول</button>
+                            <button class="btn-sm btn-danger" onclick="rejectFriendRequest('${req.userId}')">رفض</button>
                         </div>
                     `;
                     pendingArea.appendChild(div);
                 });
             }
-
-            let fArea = document.getElementById('friendsListArea');
-            fArea.innerHTML = "";
-            if (myAccount.friends.length === 0) {
-                fArea.innerHTML = "<div style='color:var(--text-muted); text-align:center; font-size:11px; padding:10px;'>لم تقم بإضافة أي أصدقاء حتى الآن.</div>";
-            } else {
-                myAccount.friends.forEach(f => {
-                    let row = document.createElement('div');
-                    row.className = "user-row";
-                    row.innerHTML = `
-                        <div>${f.avatar} <strong>${f.name}</strong></div>
-                        <div style="display:flex; gap:5px;">
-                            <button class="btn-sm" onclick="openPrivateChatSidebar('${f.id}', '${f.name}')">💬 شات</button>
-                            <button class="btn-sm btn-danger" onclick="removeFriendFromServer('${f.id}')">🗑️ حذف</button>
-                        </div>
-                    `;
-                    fArea.appendChild(row);
-                });
-            }
-
-            // *** حل مشكلة الشاشة البيضاء والتعليق عند الـ Reload ***
-            let activeScreen = document.querySelector('.screen.active');
-            if (!activeScreen || activeScreen.id === 'scrRegister') {
-                switchLobbyTab('scrMenu');
-            }
-            
-            filterSearchUsersList();
+            renderMyActualFriendsListWithStatus(); refreshRandomPlayersList();
+            let activeScreen = document.querySelector('.screen.active'); if (!activeScreen || activeScreen.id === 'scrRegister') { switchLobbyTab('scrMenu'); }
         });
 
-        function acceptFriendRequest(id) { socket.emit('acceptFriend', id); }
-        function rejectFriendRequest(id) { socket.emit('rejectFriend', id); }
-        function removeFriendFromServer(id) { if(confirm("هل تود بالتأكيد حذف هذا الصديق نهائياً؟")) { socket.emit('removeFriendOnServer', id); } }
+        function acceptFriend(userId) { socket.emit('acceptFriend', userId); }
+        function rejectFriendRequest(userId) { socket.emit('rejectFriendRequest', userId); }
+        function removeFriend(userId) { if(confirm("هل أنت متأكد من مسح وإزالة هذا اللاعب من قائمة أصدقائك؟")) { socket.emit('removeFriend', userId); } }
 
-        socket.on('globalUserList', (users) => { allGlobalUsers = users; filterSearchUsersList(); });
-        socket.on('userListUpdate', (users) => { allGlobalUsers = users; filterSearchUsersList(); });
+        socket.on('globalUserList', (users) => { allGlobalUsers = users; filterSearchUsersList(); renderMyActualFriendsListWithStatus(); });
 
         function filterSearchUsersList() {
-            let query = document.getElementById('friendSearchInput').value.toLowerCase().trim();
-            let area = document.getElementById('searchUsersArea');
-            if(!area) return;
-            area.innerHTML = "";
-
-            let count = 0;
-            allGlobalUsers.forEach(u => {
-                if (u.id === socket.id) return;
-                if (query && !u.name.toLowerCase().includes(query)) return;
-
-                count++;
-                let btnHTML = `<button class="btn-sm" onclick="sendFriendRequestToServer('${u.id}')">➕ إضافة صديق</button>`;
-                
-                if (myAccount.friends && myAccount.friends.some(f => f.id === u.id)) {
-                    btnHTML = `<span style="color:var(--accent-o); font-size:11px; font-weight:bold;">✓ صديقك الحالي</span>`;
-                } else if (myAccount.friendRequests && myAccount.friendRequests.some(r => r.id === u.id)) {
-                    btnHTML = `<span style="color:var(--text-muted); font-size:11px;">وصلك طلب منه</span>`;
-                }
-
-                let row = document.createElement('div');
-                row.className = "user-row";
-                row.innerHTML = `
-                    <div>${u.avatar} <strong>${u.name}</strong><br><small style="color:var(--text-muted); font-size:11px;">${u.bio}</small></div>
-                    <div>${btnHTML}</div>
-                `;
-                area.appendChild(row);
-            });
-
-            if(count === 0) {
-                area.innerHTML = "<div style='color:var(--text-muted); text-align:center; font-size:11px; padding:10px;'>لا توجد نتائج بحث مطابقة حالياً.</div>";
-            }
+            let query = document.getElementById('friendSearchInput').value.trim(); let area = document.getElementById('searchUsersArea'); if (!area) return; area.innerHTML = "";
+            if (query.length !== 8) { area.innerHTML = "<div style='color:var(--text-muted); font-size:11px;'>اكتب المعرف ID المكون من 8 أرقام كاملة لتظهر النتيجة بدقة...</div>"; return; }
+            let foundUser = allGlobalUsers.find(u => u.userId === query && u.userId !== myAccount.userId);
+            if (!foundUser) { area.innerHTML = "<div style='color:var(--accent-x); font-size:11px;'>لم يتم العثور على أي لاعب بهذا الـ ID الدقيق!</div>"; return; }
+            
+            let isFriend = myAccount.friends && myAccount.friends.some(f => f.userId === foundUser.userId);
+            let btnHTML = isFriend ? `<span style="color:var(--accent-o); font-size:12px;">✓ صديق</span>` : `<button class="btn-sm" onclick="sendFriendRequest('${foundUser.userId}')">➕ إضافة</button>`;
+            let div = document.createElement('div'); div.className = "user-row";
+            div.innerHTML = `<div><span class="status-indicator status-online"></span><span>${foundUser.avatar} <b>${foundUser.name}</b></span><div style="font-size:11px; color:var(--text-muted); margin-right:14px;">الرتبة: ${foundUser.rank}</div></div><div>${btnHTML}</div>`;
+            area.appendChild(div);
         }
 
-        function sendFriendRequestToServer(id) { socket.emit('sendFriendRequest', id); alert("🚀 تم إرسال طلب الصداقة بنجاح!"); }
+        function sendFriendRequest(userId) { socket.emit('sendFriendRequest', userId); }
 
-        function openPrivateChatSidebar(friendId, friendName) {
-            currentActivePrivateChatFriendId = friendId;
-            document.getElementById('privateChatPartnerName').innerText = friendName;
-            document.getElementById('privateChatLogs').innerHTML = "";
-            document.getElementById('privateChatSidebar').classList.add('open');
-            socket.emit('getPrivateChatHistory', friendId); 
-        }
-
-        socket.on('receivePrivateHistory', (history) => {
-            let logs = document.getElementById('privateChatLogs');
-            logs.innerHTML = "";
-            history.forEach(msg => {
-                let side = msg.fromId === socket.id ? 'me' : 'other';
-                logs.innerHTML += `<div class="chat-msg ${side}"><strong>${msg.senderName}:</strong> ${msg.message}</div>`;
-            });
-            logs.scrollTop = logs.scrollHeight;
-        });
-
-        function sendPrivateMessageToServer() {
-            let input = document.getElementById('privateChatInputField');
-            let txt = input.value.trim(); if (!txt) return;
-            socket.emit('sendPrivateMessage', { toId: currentActivePrivateChatFriendId, message: txt });
-            input.value = "";
-        }
-
-        socket.on('receivePrivateMessage', (msg) => {
-            if (currentActivePrivateChatFriendId === msg.fromId || currentActivePrivateChatFriendId === msg.toId) {
-                let logs = document.getElementById('privateChatLogs');
-                let side = msg.fromId === socket.id ? 'me' : 'other';
-                logs.innerHTML += `<div class="chat-msg ${side}"><strong>${msg.senderName}:</strong> ${msg.message}</div>`;
-                logs.scrollTop = logs.scrollHeight;
-            } else {
-                alert(`📩 رسالة خاصة من [ ${msg.senderName} ]: ${msg.message}`);
-            }
-        });
-
-        function closePrivateChatSidebar() { document.getElementById('privateChatSidebar').classList.remove('open'); }
-
-        function startRandomMatch() { 
-            document.getElementById('waitText').innerText = "⏳ بانتظار دخول الخصم...";
-            showScreen('scrWaiting');
-            socket.emit('joinRandom'); 
-        }
-        function goBackToLobby() { switchLobbyTab('scrMenu'); }
-        
-        function joinCustomRoomCode() {
-            let code = document.getElementById('customRoomCode').value.trim();
-            if (!code) return alert("أدخل رقم الروم أولاً!");
-            activeRoomId = code;
-            document.getElementById('roomInviteSection').style.display = 'block';
-            renderInviteFriendsList();
-            socket.emit('joinRoom', code);
-        }
-
-        function renderInviteFriendsList() {
-            let container = document.getElementById('inviteFriendsContainer');
+        // آلية جلب وعرض 5 لاعبين عشوائيين مع زر التحديث
+        function refreshRandomPlayersList() {
+            let container = document.getElementById('randomPlayersContainer'); if (!container) return;
             container.innerHTML = "";
-            if (myAccount.friends.length === 0) {
-                container.innerHTML = "<span style='font-size:11px; color:var(--text-muted);'>قائمة الأصدقاء فارغة لإرسال دعوات.</span>";
-                return;
-            }
-            myAccount.friends.forEach(f => {
-                let div = document.createElement('div');
-                div.style = "display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid var(--border);";
+            let potentialList = allGlobalUsers.filter(u => u.userId !== myAccount.userId && !(myAccount.friends || []).some(f => f.userId === u.userId));
+            let shuffled = potentialList.sort(() => 0.5 - Math.random()).slice(0, 5);
+            if (shuffled.length === 0) { container.innerHTML = "<div style='color:var(--text-muted); font-size:11px; text-align:center;'>لا يوجد لاعبين متاحين حالياً.</div>"; return; }
+            shuffled.forEach(player => {
+                let div = document.createElement('div'); div.className = "user-row";
                 div.innerHTML = `
-                    <div style="font-size:12px;">${f.avatar} ${f.name}</div>
-                    <button class="btn-sm" style="padding:3px 7px;" onclick="inviteFriendToMyRoom('${f.id}')">📬 دعوة</button>
+                    <div>
+                        <span class="status-indicator status-online"></span>
+                        <span>${player.avatar} <b>${player.name}</b></span>
+                    </div>
+                    <div style="display:flex; gap:4px;">
+                        <button class="btn-sm btn-outline" onclick="openOtherPlayerProfilePopupInCenter('${player.userId}')">👤 بروفايل</button>
+                        <button class="btn-sm" onclick="sendFriendRequest('${player.userId}')">➕ إضافة</button>
+                    </div>
                 `;
                 container.appendChild(div);
             });
         }
 
-        function inviteFriendToMyRoom(id) { socket.emit('inviteFriendToRoom', { friendId: id, roomCode: activeRoomId }); alert("تم إرسال دعوة الروم بنجاح!"); }
+        function renderMyActualFriendsListWithStatus() {
+            let container = document.getElementById('myActualFriendsListArea'); if(!container) return; container.innerHTML = "";
+            if(!myAccount.friends || myAccount.friends.length === 0) { container.innerHTML = "<div style='color:var(--text-muted); font-size:11px; text-align:center;'>قائمة أصدقائك فارغة حالياً.</div>"; return; }
+            myAccount.friends.forEach(f => {
+                let matchedOnlinePlayer = allGlobalUsers.find(u => u.userId === f.userId); let isOnline = !!matchedOnlinePlayer; let statusClass = isOnline ? "status-online" : "status-offline";
+                let div = document.createElement('div'); div.className = "user-row";
+                div.innerHTML = `<div><span class="status-indicator ${statusClass}"></span><span>${f.avatar} <b>${f.name}</b></span><div style="font-size:10px; color:var(--text-muted); margin-right:14px;">ID: ${f.userId} | ${isOnline ? matchedOnlinePlayer.rank : 'أوفلاين'}</div></div><div><button class="btn-sm btn-danger" onclick="removeFriend('${f.userId}')">❌ حذف</button></div>`;
+                container.appendChild(div);
+            });
+        }
+
+        socket.on('leaderboardUpdate', (top100) => {
+            let container = document.getElementById('leaderboardRowsContainer'); if(!container) return; container.innerHTML = "";
+            top100.forEach((player, idx) => {
+                let tr = document.createElement('tr'); let actionBtn = `<button class="btn-sm btn-outline" onclick="openOtherPlayerProfilePopupInCenter('${player.userId}')">عرض</button>`;
+                if (player.userId === myAccount.userId) actionBtn = `<span style="color:var(--text-muted); font-size:11px;">أنت</span>`;
+                tr.innerHTML = `<td style="font-weight:bold; color:var(--primary);">${idx + 1}</td><td>${player.avatar} ${player.name}</td><td style="font-weight:bold; color:var(--accent-o);">${player.score}</td><td>${actionBtn}</td>`;
+                container.appendChild(tr);
+            });
+        });
+
+        function openOtherPlayerProfilePopupInCenter(userId) {
+            let target = allGlobalUsers.find(u => u.userId === userId);
+            if (target) {
+                let bodyBlock = document.getElementById('oppPopupBodyDetails');
+                bodyBlock.innerHTML = `<b>الاسم:</b> ${target.name} <br><b>ID:</b> ${target.userId} <br><b>الرتبة:</b> ${target.rank} <br><b>السكور:</b> ${target.score} <br><b>الوصف:</b> ${target.bio || "لا يوجد وصف"} <br><br><b>آخر 5 مباريات:</b> ${(target.history || []).join(' , ') || "لا توجد سجلات"}`;
+                document.getElementById('otherPlayerProfilePopupModal').classList.add('active');
+            }
+        }
+        function closeOtherPlayerProfilePopup() { document.getElementById('otherPlayerProfilePopupModal').classList.remove('active'); }
+
+        function loadPrivateChatWithSelectedFriend() {
+            selectedChatFriendId = document.getElementById('chatFriendSelect').value; let block = document.getElementById('privateChatBlockArea');
+            if(!selectedChatFriendId) { block.style.display = "none"; return; } block.style.display = "flex";
+            socket.emit('getPrivateMessages', { myId: myAccount.userId, friendId: selectedChatFriendId });
+        }
+
+        function sendPrivateChatMessageToServer() {
+            let inp = document.getElementById('privateChatInputField'); let msg = inp.value.trim(); if(!msg || !selectedChatFriendId) return;
+            socket.emit('sendPrivateMessage', { myId: myAccount.userId, friendId: selectedChatFriendId, senderName: myAccount.name, message: msg }); inp.value = "";
+        }
+
+        socket.on('privateMessagesList', (list) => {
+            let container = document.getElementById('privateChatMsgContainer'); if(!container) return; container.innerHTML = "";
+            list.forEach(m => {
+                let div = document.createElement('div'); let isMine = m.senderName === myAccount.name; div.className = `msg-bubble ${isMine ? 'msg-mine' : 'msg-other'}`;
+                div.innerHTML = `<b>${m.senderName}:</b> ${m.message} <div style="font-size:9px; opacity:0.6; text-align:left;">${m.time}</div>`; container.appendChild(div);
+            });
+            container.scrollTop = container.scrollHeight;
+        });
+
+        function joinCustomRoomCode() {
+            let code = document.getElementById('customRoomCode').value.trim(); if (!code) return alert("الرجاء إدخال اسم أو كود الغرفة أولاً!");
+            activeRoomId = code; document.getElementById('roomInviteSection').style.display = 'block'; renderInviteFriendsList();
+        }
+
+        function renderInviteFriendsList() {
+            let container = document.getElementById('inviteFriendsContainer'); container.innerHTML = "";
+            if (!myAccount.friends || myAccount.friends.length === 0) { container.innerHTML = "<div style='font-size:11px; color:var(--text-muted);'>لا يوجد أاصدقاء مضافين لإرسال الدعوات.</div>"; return; }
+            myAccount.friends.forEach(f => {
+                let div = document.createElement('div'); div.className = "user-row";
+                div.innerHTML = `<div style="font-size:11px;">${f.avatar} ${f.name}</div><button class="btn-sm" onclick="inviteFriendToMyRoom('${f.userId}')">📬 إرسال دعوة</button>`;
+                container.appendChild(div);
+            });
+        }
+
+        function inviteFriendToMyRoom(friendUserId) { socket.emit('inviteFriendToRoom', { friendUserId: friendUserId, roomCode: activeRoomId }); }
 
         socket.on('roomInviteReceived', (data) => {
-            if (confirm(`📬 دعوة انضمام من [ ${data.hostName} ] لروم رقم: ${data.roomCode}\nهل تقبل الدخول؟`)) {
-                activeRoomId = data.hostName;
-                showScreen('scrCustomRoom');
-                document.getElementById('customRoomCode').value = data.roomCode;
-                socket.emit('joinRoom', data.roomCode);
-            }
+            document.getElementById('roomInvitePopupText').innerHTML = `تم دعوتك إلى الروم بواسطة اللاعب <b>( ${data.hostName} )</b>`;
+            document.getElementById('btnAcceptRoomInvite').onclick = () => { socket.emit('acceptRoomInviteAndStart', { roomCode: data.roomCode, hostSocketId: data.hostSocketId }); closeRoomInvitePopup(); };
+            document.getElementById('btnRejectRoomInvite').onclick = () => { socket.emit('rejectRoomInvite', { hostSocketId: data.hostSocketId }); closeRoomInvitePopup(); };
+            document.getElementById('roomInvitePopupModal').classList.add('active');
         });
 
-        socket.on('waiting', (msg) => { document.getElementById('waitText').innerText = msg; showScreen('scrWaiting'); });
+        function closeRoomInvitePopup() { document.getElementById('roomInvitePopupModal').classList.remove('active'); }
+        function startRandomMatch() { showScreen('scrWaiting'); socket.emit('joinRandom'); }
+        function goBackToLobby() { switchLobbyTab('scrMenu'); }
+
+        socket.on('waiting', (msg) => { document.getElementById('waitText').innerText = msg; });
 
         socket.on('gameStart', (data) => {
-            activeRoomId = data.room; currentSymbol = data.symbol; myTurnActive = (currentSymbol === 'X');
-            document.getElementById('p1Name').innerText = myAccount.name; document.getElementById('p1Symbol').innerText = `(${currentSymbol})`;
-            document.getElementById('p2Name').innerText = data.opponent.name; document.getElementById('p2Symbol').innerText = `(${currentSymbol==='X'?'O':'X'})`;
-            clearGridVisuals(); updateTurnText(); showScreen('scrGame');
-            document.getElementById('chatLogs').innerHTML = "";
+            activeRoomId = data.room; currentSymbol = data.symbol; myTurnActive = (currentSymbol === 'X'); opponentUserIdInMatch = data.opponent.userId;
+            document.getElementById('p1Name').innerText = myAccount.name; document.getElementById('p1ScoreLabel').innerText = ` [سكور: ${myAccount.score}]`;
+            document.getElementById('p2Name').innerText = data.opponent.name; document.getElementById('p2ScoreLabel').innerText = ` [سكور: ${data.opponent.score}]`;
+            document.getElementById('matchTimer').innerText = "02:00";
+
+            // فحص حالة الصداقة لتعطيل الزر في حال كان صديقاً بالفعل
+            let isAlreadyFriend = (myAccount.friends || []).some(f => f.userId === data.opponent.userId);
+            let btn = document.getElementById('oppHoverAddBtn');
+            if (isAlreadyFriend) { btn.innerText = "✓ صديقك"; btn.disabled = true; } else { btn.innerText = "➕ إضافة كصديق"; btn.disabled = false; btn.onclick = () => { sendFriendRequest(data.opponent.userId); }; }
+
+            document.getElementById('oppHoverBio').innerText = `الوصف: ${data.opponent.bio || 'جاهز للتحدي!'}`;
+            document.getElementById('gameChatAreaMessages').innerHTML = ""; clearGridVisuals(); updateTurnText(); showScreen('scrGame');
         });
 
-        function sendCellClick(idx) {
-            if (!myTurnActive) return;
-            if (document.getElementById(`c${idx}`).innerText !== "") return;
-            socket.emit('makeMove', { room: activeRoomId, index: idx, symbol: currentSymbol });
-        }
+        socket.on('timerUpdate', (seconds) => {
+            let mins = Math.floor(seconds / 60).toString().padStart(2, '0'); let secs = (seconds % 60).toString().padStart(2, '0');
+            document.getElementById('matchTimer').innerText = `${mins}:${secs}`;
+        });
+
+        function sendCellClick(idx) { if (!myTurnActive) return; if (document.getElementById(`c${idx}`).innerText !== "") return; socket.emit('makeMove', { room: activeRoomId, index: idx, symbol: currentSymbol }); }
 
         socket.on('moveMade', (data) => {
-            let cell = document.getElementById(`c${data.index}`);
-            cell.innerText = data.symbol; cell.className = `cell ${data.symbol}`;
-            myTurnActive = (data.nextTurnSymbol === currentSymbol);
-            updateTurnText(); evaluateGridLocally();
+            let cell = document.getElementById(`c${data.index}`); cell.innerText = data.symbol; cell.className = `cell ${data.symbol}`;
+            myTurnActive = (data.nextTurnSymbol === currentSymbol); updateTurnText(); evaluateGridLocally();
         });
 
-        function updateTurnText() { document.getElementById('gameTurnStatus').innerText = myTurnActive ? "دورك الآن!" : "انتظر الخصم..."; }
+        function updateTurnText() { document.getElementById('gameTurnStatus').innerText = myTurnActive ? "💥 دورك الحالي!" : "⏳ دور الخصم..."; }
         function clearGridVisuals() { for (let i = 0; i < 9; i++) { let c = document.getElementById(`c${i}`); c.innerText = ""; c.className = "cell"; } }
-
-        function openChatSidebar() { document.getElementById('chatSidebar').classList.add('open'); }
-        function closeChatSidebar() { document.getElementById('chatSidebar').classList.remove('open'); }
-        
-        function sendLiveMessage() {
-            let input = document.getElementById('chatInputField');
-            let text = input.value.trim();
-            if (!text) return;
-            socket.emit('sendChatMessage', { room: activeRoomId, message: text });
-            input.value = "";
-        }
-
-        socket.on('receiveChatMessage', (data) => {
-            let logs = document.getElementById('chatLogs');
-            let side = data.sender === myAccount.name ? 'me' : 'other';
-            logs.innerHTML += `<div class="chat-msg ${side}"><strong>${data.sender}:</strong> ${data.message}</div>`;
-            logs.scrollTop = logs.scrollHeight;
-        });
 
         function evaluateGridLocally() {
             let cells = []; for (let i = 0; i < 9; i++) cells.push(document.getElementById(`c${i}`).innerText);
-            const patterns = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-            let winSymbol = null;
+            const patterns = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]; let winSymbol = null;
             for (let p of patterns) { if (cells[p[0]] && cells[p[0]] === cells[p[1]] && cells[p[0]] === cells[p[2]]) { winSymbol = cells[p[0]]; break; } }
             if (winSymbol) {
-                let res = (winSymbol === currentSymbol) ? "فوز" : "خسارة";
-                openGameOverModal(res === "فوز" ? "🎉 انتصار أسطوري!" : "💔 حظاً أوفر!", "انتهت اللعبة!");
-                socket.emit('gameEndResult', { room: activeRoomId, result: res });
-                myTurnActive = false;
+                let res = (winSymbol === currentSymbol) ? "فوز" : "خسارة"; openGameOverModal(res === "فوز" ? "🎉 انتصرت!" : "💔 هزيمة!", `النتيجة: ${res}`);
+                socket.emit('gameEndResult', { room: activeRoomId, result: res }); myTurnActive = false;
             } else if (!cells.includes("")) {
-                openGameOverModal("🤝 تعادل قوي!", "تكافأت القوى!");
-                socket.emit('gameEndResult', { room: activeRoomId, result: "تعادل" });
-                myTurnActive = false;
+                openGameOverModal("🤝 تعادل!", "انتهت بالتعادل."); socket.emit('gameEndResult', { room: activeRoomId, result: "تعادل" }); myTurnActive = false;
             }
         }
 
-        function openGameOverModal(title, body) {
-            document.getElementById('gameOverTitle').innerText = title; document.getElementById('gameOverBody').innerText = body;
-            document.getElementById('gameOverModal').classList.add('active');
-        }
+        function resignCurrentGame() { socket.emit('playerResigned', { room: activeRoomId }); openGameOverModal("🏳️ انسحاب", "لقد انسحبت من المباراة."); }
+        socket.on('opponentResignedResult', (data) => { openGameOverModal("🎉 فوز بالانسحاب", data.message); });
+
+        function openGameOverModal(title, body) { document.getElementById('gameOverTitle').innerText = title; document.getElementById('gameOverBody').innerText = body; document.getElementById('gameOverModal').classList.add('active'); }
         function closeModalCompletelyAndGoLobby() { document.getElementById('gameOverModal').classList.remove('active'); exitGameToLobby(); }
-        function triggerRematchRequest() { socket.emit('restartGame', activeRoomId); }
-        socket.on('restart', () => { clearGridVisuals(); myTurnActive = (currentSymbol === 'X'); updateTurnText(); document.getElementById('gameOverModal').classList.remove('active'); });
+        function sendInGameChat() { let inp = document.getElementById('gameChatInputField'); let m = inp.value.trim(); if(!m) return; socket.emit('sendChatMessage', { room: activeRoomId, message: m }); inp.value = ""; }
+        socket.on('receiveChatMessage', (data) => { let area = document.getElementById('gameChatAreaMessages'); let div = document.createElement('div'); div.innerHTML = `<b>${data.sender}:</b> ${data.message}`; area.appendChild(div); area.scrollTop = area.scrollHeight; });
+        socket.on('notification', (data) => { alert(data.message); });
+        socket.on('friendRequestRejectedNotification', (data) => { filterSearchUsersList(); });
+        socket.on('gameNotification', (msg) => { alert(msg); exitGameToLobby(); });
 
-        socket.on('timerUpdate', (sec) => {
-            let m = Math.floor(sec / 60); let s = sec % 60;
-            document.getElementById('matchTimer').innerText = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-        });
-        socket.on('timeOutEnd', () => { openGameOverModal("⏱️ انتهى الوقت!", "انتهت المدة!"); myTurnActive = false; });
-        
-        socket.on('opponentDisconnected', () => { 
-            alert("⚠️ الخصم انسحب أو غادر المباراة! سيتم توجيهك للرئيسية لمنع التعليق."); 
-            document.getElementById('gameOverModal').classList.remove('active');
-            exitGameToLobby(); 
-        });
-        
-        function exitGameToLobby() { socket.emit('leaveRoom'); activeRoomId = ""; switchLobbyTab('scrMenu'); }
-
-        function openEditProfileModal() {
-            document.getElementById('editNameInput').value = myAccount.name;
-            document.getElementById('editAvatarSelect').value = myAccount.avatar;
-            document.getElementById('editBioInput').value = myAccount.bio;
-            document.getElementById('editProfileModal').classList.add('active');
-        }
-        function closeEditProfileModal() { document.getElementById('editProfileModal').classList.remove('active'); }
-        
-        function saveProfileChangesOnline() {
-            let newName = document.getElementById('editNameInput').value.trim();
-            let chosenAvatar = document.getElementById('editAvatarSelect').value;
-            let chosenBio = document.getElementById('editBioInput').value.trim();
-            if(!newName) return alert("أدخل اسم اللاعب أولاً!");
-
-            if (newName.toLowerCase() !== myAccount.name.toLowerCase() && myAccount.diamonds < 100) {
-                return alert("❌ لا تملك مجوهرات كافية لتغيير الاسم! (تحتاج 100 جوهرة).");
-            }
-
-            socket.emit('updateBioAndAvatar', { name: newName, avatar: chosenAvatar, bio: chosenBio });
-            closeEditProfileModal();
-        }
-
-        function buyDiamondsSimulate(amt) { myAccount.diamonds += amt; socket.emit('registerUser', myAccount); alert("تم شحن الجواهر بنجاح!"); }
-        function openGlobalSettings() { document.getElementById('settingsModal').style.display = 'flex'; }
-        function closeGlobalSettings() { document.getElementById('settingsModal').style.display = 'none'; }
-        socket.on('notification', (data) => alert(data.message));
+        function exitGameToLobby() { activeRoomId = ""; switchLobbyTab('scrMenu'); }
     </script>
 </body>
 </html>

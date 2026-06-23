@@ -7,303 +7,228 @@ const io = new Server(server);
 
 app.use(express.static(__dirname));
 
-// قاعدة بيانات حية داخل الذاكرة
-let onlineUsers = {}; // socket.id -> user profile
-let rooms = {};       // roomCode -> room data
-let privateChats = []; // تخزين الرسائل: { fromId, toId, senderName, message, timestamp }
+let onlineUsers = {}; // socket.id -> userData
+let rooms = {};       // roomCode -> roomData
+let privateChats = {}; 
 
-// تنظيف رسائل الشات الخاص تلقائياً كل ساعة (لحذف الرسائل التي مر عليها أكثر من 12 ساعة)
-setInterval(() => {
-    const twelveHoursAgo = Date.now() - (12 * 60 * 60 * 1000);
-    privateChats = privateChats.filter(msg => msg.timestamp > twelveHoursAgo);
-}, 60 * 60 * 1000);
+function calculateRank(score) {
+    if (score <= 0) return "بدون رتبة";
+    let title = ""; let min = 0, max = 100;
+    if (score >= 1 && score <= 100) { title = "برونز"; min = 1; max = 100; }
+    else if (score <= 300) { title = "فضة"; min = 101; max = 300; }
+    else if (score <= 500) { title = "ذهب"; min = 301; max = 500; }
+    else if (score <= 700) { title = "بلاتين"; min = 501; max = 700; }
+    else if (score <= 1000) { title = "ألماس"; min = 701; max = 1000; }
+    else if (score <= 1500) { title = "هيرو"; min = 1001; max = 1500; }
+    else if (score <= 3000) { title = "قراند ماستر"; min = 1501; max = 3000; }
+    else { return "🏆 الأسطورة"; }
+    let range = (max - min + 1) / 3;
+    let currentOffset = score - min;
+    let subRank = 3 - Math.floor(currentOffset / range);
+    return `${title} ${Math.max(1, Math.min(3, subRank))}`;
+}
+
+setInterval(() => { privateChats = {}; }, 12 * 60 * 60 * 1000);
 
 io.on('connection', (socket) => {
-    console.log(`لاعب متصل جديد: ${socket.id}`);
 
-    // 1. تسجيل الدخول أو إنشاء الحساب لأول مرة
     socket.on('registerUser', (userData) => {
-        let isNameTaken = Object.values(onlineUsers).some(
-            u => u.name.toLowerCase() === userData.name.toLowerCase() && u.id !== socket.id
-        );
-
-        if (isNameTaken) {
-            socket.emit('notification', { type: 'error', message: '⚠️ هذا الاسم مستخدم بالفعل! اختر اسماً فريداً.' });
-            return;
-        }
-
+        let userId = userData.userId || Math.floor(10000000 + Math.random() * 90000000).toString();
         onlineUsers[socket.id] = {
-            id: socket.id,
-            name: userData.name,
-            avatar: userData.avatar || '🥷',
-            bio: userData.bio || '',
-            gold: userData.gold ?? 1000,
-            diamonds: userData.diamonds ?? 150, 
-            friends: userData.friends || [],
-            friendRequests: userData.friendRequests || [], 
-            history: userData.history || []
+            id: socket.id, userId: userId, name: userData.name || "لاعب مجهول",
+            avatar: userData.avatar || '🥷', bio: userData.bio || 'جاهز للتحدي!',
+            gold: userData.gold ?? 1000, diamonds: userData.diamonds ?? 150,
+            score: userData.score ?? 10, friends: userData.friends || [],
+            friendRequests: userData.friendRequests || [], history: userData.history || []
         };
-
+        onlineUsers[socket.id].rank = calculateRank(onlineUsers[socket.id].score);
         socket.emit('updateProfile', onlineUsers[socket.id]);
-        io.emit('globalUserList', Object.values(onlineUsers));
+        sendGlobalUpdates();
     });
 
-    // 2. تحديث البروفايل (تغيير الاسم بخصم 100 جوهرة)
-    socket.on('updateBioAndAvatar', (data) => {
-        let user = onlineUsers[socket.id];
-        if (!user) return;
+    function sendGlobalUpdates() {
+        let usersArray = Object.values(onlineUsers);
+        io.emit('globalUserList', usersArray);
+        let top100 = [...usersArray].sort((a, b) => b.score - a.score).slice(0, 100);
+        io.emit('leaderboardUpdate', top100);
+    }
 
-        if (data.name && data.name.toLowerCase() !== user.name.toLowerCase()) {
-            let isNameTaken = Object.values(onlineUsers).some(
-                u => u.name.toLowerCase() === data.name.toLowerCase() && u.id !== socket.id
-            );
-            if (isNameTaken) {
-                socket.emit('notification', { type: 'error', message: '⚠️ الاسم الجديد مستخدم من قبل لاعب آخر!' });
-                return;
-            }
-            if (user.diamonds < 100) {
-                socket.emit('notification', { type: 'error', message: '❌ لا تملك مجوهرات كافية لتغيير الاسم! (تكلفة التغيير 100 جوهرة).' });
-                return;
-            }
-            user.diamonds -= 100;
-            user.name = data.name;
-        }
+    socket.on('searchUsers', () => { sendGlobalUpdates(); });
 
-        user.avatar = data.avatar;
-        user.bio = data.bio;
-
-        socket.emit('updateProfile', user);
-        io.emit('globalUserList', Object.values(onlineUsers));
-        socket.emit('notification', { type: 'success', message: '✨ تم حفظ وتحديث بيانات بروفايلك بنجاح!' });
-    });
-
-    // 3. إرسال طلب صداقة
-    socket.on('sendFriendRequest', (targetSocketId) => {
-        let sender = onlineUsers[socket.id];
-        let receiver = onlineUsers[targetSocketId];
-
-        if (!sender || !receiver || socket.id === targetSocketId) return;
-
-        if (sender.friends.length >= 50) {
-            socket.emit('notification', { type: 'error', message: '❌ لا يمكنك إرسال الطلب، لقد وصلت للحد الأقصى للأصدقاء (50 صديق)!' });
-            return;
-        }
-        if (receiver.friends.length >= 50) {
-            socket.emit('notification', { type: 'error', message: '❌ هذا اللاعب ممتلئ ولديه 50 صديقاً بالفعل!' });
-            return;
-        }
-
-        if (!receiver.friendRequests.some(r => r.id === socket.id)) {
-            receiver.friendRequests.push({ id: socket.id, name: sender.name, avatar: sender.avatar });
-            io.to(targetSocketId).emit('updateProfile', receiver);
-            io.to(targetSocketId).emit('notification', { type: 'info', message: `🔔 وصلك طلب صداقة جديد من اللاعب [ ${sender.name} ]` });
-        }
-    });
-
-    // 4. قبول طلب الصداقة
-    socket.on('acceptFriend', (targetSocketId) => {
-        let me = onlineUsers[socket.id];
-        let friend = onlineUsers[targetSocketId];
-
-        if (!me || !friend) return;
-
-        if (me.friends.length >= 50 || friend.friends.length >= 50) {
-            socket.emit('notification', { type: 'error', message: '❌ تعذر القبول لتخطي الحد الأقصى (50 صديق).' });
-            return;
-        }
-
-        me.friendRequests = me.friendRequests.filter(r => r.id !== targetSocketId);
-
-        if (!me.friends.some(f => f.id === targetSocketId)) {
-            me.friends.push({ id: targetSocketId, name: friend.name, avatar: friend.avatar });
-        }
-        if (!friend.friends.some(f => f.id === socket.id)) {
-            friend.friends.push({ id: socket.id, name: me.name, avatar: me.avatar });
-        }
-
-        socket.emit('updateProfile', me);
-        io.to(targetSocketId).emit('updateProfile', friend);
-        io.emit('globalUserList', Object.values(onlineUsers));
-
-        socket.emit('notification', { type: 'success', message: `🎉 تم قبول الطلب وأصبح ${friend.name} صديقك الآن!` });
-        io.to(targetSocketId).emit('notification', { type: 'success', message: `🎉 قبل ${me.name} طلب الصداقة الخاص بك!` });
-    });
-
-    // 5. رفض طلب الصداقة
-    socket.on('rejectFriend', (targetSocketId) => {
-        let me = onlineUsers[socket.id];
-        if (me) {
-            me.friendRequests = me.friendRequests.filter(r => r.id !== targetSocketId);
-            socket.emit('updateProfile', me);
-        }
-    });
-
-    // 6. حذف صديق
-    socket.on('removeFriendOnServer', (friendId) => {
-        let me = onlineUsers[socket.id];
-        let friend = onlineUsers[friendId];
-
-        if (me) {
-            me.friends = me.friends.filter(f => f.id !== friendId);
-            socket.emit('updateProfile', me);
-        }
-        if (friend) {
-            friend.friends = friend.friends.filter(f => f.id !== socket.id);
-            io.to(friendId).emit('updateProfile', friend);
-        }
-        io.emit('globalUserList', Object.values(onlineUsers));
-        socket.emit('notification', { type: 'info', message: '🗑️ تم إزالة الصديق بنجاح من قائمتك.' });
-    });
-
-    // 7. جلب شات الأصدقاء المستمر (آخر 12 ساعة)
-    socket.on('getPrivateChatHistory', (friendId) => {
-        let history = privateChats.filter(msg => 
-            (msg.fromId === socket.id && msg.toId === friendId) || 
-            (msg.fromId === friendId && msg.toId === socket.id)
-        );
-        socket.emit('receivePrivateHistory', history);
-    });
-
-    socket.on('sendPrivateMessage', (data) => {
-        let sender = onlineUsers[socket.id];
-        if (!sender) return;
-
-        let msgObj = {
-            fromId: socket.id,
-            toId: data.toId,
-            senderName: sender.name,
-            message: data.message,
-            timestamp: Date.now()
-        };
-
-        privateChats.push(msgObj);
-        io.to(data.toId).emit('receivePrivateMessage', msgObj);
-        socket.emit('receivePrivateMessage', msgObj);
-    });
-
-    // 8. نظام الروم واللعب التنافسي X-O
-    socket.on('searchUsers', () => {
-        socket.emit('userListUpdate', Object.values(onlineUsers));
-    });
-
+    // نظام الدعوات والرفض المؤكد للروم المخصص
     socket.on('inviteFriendToRoom', (data) => {
         let sender = onlineUsers[socket.id];
-        if (sender) {
-            io.to(data.friendId).emit('roomInviteReceived', { roomCode: data.roomCode, hostName: sender.name });
+        if (!sender) return;
+        let targetSocketId = Object.keys(onlineUsers).find(sid => onlineUsers[sid].userId === data.friendUserId);
+        if (targetSocketId) {
+            io.to(targetSocketId).emit('roomInviteReceived', {
+                roomCode: data.roomCode, hostName: sender.name, hostSocketId: socket.id
+            });
+            socket.emit('notification', { type: 'success', message: '🚀 تم إرسال إشعار الدعوة لصديقك بنجاح!' });
         }
+    });
+
+    socket.on('rejectRoomInvite', (data) => {
+        let hostSocket = io.sockets.sockets.get(data.hostSocketId);
+        if (hostSocket) {
+            hostSocket.emit('notification', { type: 'info', message: '❌ رفض صديقك طلب دعوة الانضمام للغرفة.' });
+        }
+    });
+
+    socket.on('acceptRoomInviteAndStart', (data) => {
+        let guestSocket = socket; let hostSocket = io.sockets.sockets.get(data.hostSocketId);
+        let roomCode = data.roomCode;
+        if (!rooms[roomCode]) {
+            rooms[roomCode] = { players: [], board: Array(9).fill(""), turn: 0, timer: null, timeLeft: 120, isCustom: true };
+        }
+        if (!rooms[roomCode].players.includes(data.hostSocketId) && hostSocket) {
+            rooms[roomCode].players.push(data.hostSocketId); hostSocket.join(roomCode);
+        }
+        if (!rooms[roomCode].players.includes(guestSocket.id)) {
+            rooms[roomCode].players.push(guestSocket.id); guestSocket.join(roomCode);
+        }
+        startRoomTimer(roomCode);
     });
 
     socket.on('joinRandom', () => {
         let availableRoom = Object.keys(rooms).find(code => rooms[code].players.length === 1 && !rooms[code].isCustom);
         let roomCode = availableRoom || Math.floor(1000 + Math.random() * 9000).toString();
-        handleRoomJoin(socket, roomCode, false);
-    });
-
-    socket.on('joinRoom', (roomCode) => {
-        handleRoomJoin(socket, roomCode, true);
-    });
-
-    function handleRoomJoin(socket, roomCode, isCustom) {
         if (!rooms[roomCode]) {
-            rooms[roomCode] = { players: [], board: Array(9).fill(""), turn: 0, timer: null, timeLeft: 120, isCustom: isCustom };
+            rooms[roomCode] = { players: [], board: Array(9).fill(""), turn: 0, timer: null, timeLeft: 120, isCustom: false };
         }
-
-        let room = rooms[roomCode];
-        if (room.players.length >= 2) {
-            socket.emit('notification', { type: 'error', message: '🚫 هذه الغرفة ممتلئة باللاعبين!' });
-            return;
-        }
-
-        room.players.push(socket.id);
-        socket.join(roomCode);
-
+        let room = rooms[roomCode]; room.players.push(socket.id); socket.join(roomCode);
         if (room.players.length === 1) {
-            socket.emit('waiting', `⏳ بانتظار دخول الخصم...`);
+            socket.emit('waiting', `⏳ بانتظار دخول الخصم في النمط التنافسي...`);
         } else if (room.players.length === 2) {
-            let p1 = onlineUsers[room.players[0]] || { name: "لاعب 1" };
-            let p2 = onlineUsers[room.players[1]] || { name: "لاعب 2" };
-
-            io.to(room.players[0]).emit('gameStart', { room: roomCode, symbol: 'X', opponent: p2 });
-            io.to(room.players[1]).emit('gameStart', { room: roomCode, symbol: 'O', opponent: p1 });
-            startRoomTimer(roomCode);
-        }
-    }
-
-    socket.on('makeMove', (data) => {
-        let room = rooms[data.room];
-        if (!room) return;
-        room.board[data.index] = data.symbol;
-        let nextSymbol = data.symbol === 'X' ? 'O' : 'X';
-        io.to(data.room).emit('moveMade', { index: data.index, symbol: data.symbol, nextTurnSymbol: nextSymbol });
-    });
-
-    socket.on('sendChatMessage', (data) => {
-        let user = onlineUsers[socket.id];
-        if (user) {
-            io.to(data.room).emit('receiveChatMessage', { sender: user.name, message: data.message });
-        }
-    });
-
-    socket.on('gameEndResult', (data) => {
-        let room = rooms[data.room];
-        if (room) {
-            clearInterval(room.timer);
-            let user = onlineUsers[socket.id];
-            if (user) {
-                if (data.result === 'فوز') { user.gold += 100; user.history.push('فوز'); }
-                else if (data.result === 'خسارة') { user.history.push('خسارة'); }
-                else { user.history.push('تعادل'); }
-                socket.emit('updateProfile', user);
-            }
-        }
-    });
-
-    socket.on('restartGame', (roomCode) => {
-        let room = rooms[roomCode];
-        if (room) {
-            room.board = Array(9).fill("");
-            clearInterval(room.timer);
-            room.timeLeft = 120;
-            io.to(roomCode).emit('restart');
             startRoomTimer(roomCode);
         }
     });
 
-    socket.on('leaveRoom', () => { disconnectFromRoom(socket); });
-    socket.on('disconnect', () => {
-        disconnectFromRoom(socket);
-        delete onlineUsers[socket.id];
-        io.emit('globalUserList', Object.values(onlineUsers));
-    });
-
-    function disconnectFromRoom(socket) {
-        Object.keys(rooms).forEach(code => {
-            let room = rooms[code];
-            if (room.players.includes(socket.id)) {
-                clearInterval(room.timer);
-                socket.leave(code);
-                io.to(code).emit('opponentDisconnected');
-                delete rooms[code];
-            }
-        });
-    }
-
+    // تشغيل العداد والمزامنة للوقت
     function startRoomTimer(roomCode) {
-        let room = rooms[roomCode];
-        if (!room) return;
-        clearInterval(room.timer);
+        let room = rooms[roomCode]; if (!room) return;
+        clearInterval(room.timer); room.timeLeft = 120;
+        let p1 = onlineUsers[room.players[0]] || { name: "لاعب 1" };
+        let p2 = onlineUsers[room.players[1]] || { name: "لاعب 2" };
+        io.to(room.players[0]).emit('gameStart', { room: roomCode, symbol: 'X', opponent: p2, isCustom: room.isCustom });
+        io.to(room.players[1]).emit('gameStart', { room: roomCode, symbol: 'O', opponent: p1, isCustom: room.isCustom });
+
         room.timer = setInterval(() => {
             room.timeLeft--;
             io.to(roomCode).emit('timerUpdate', room.timeLeft);
             if (room.timeLeft <= 0) {
                 clearInterval(room.timer);
-                io.to(roomCode).emit('timeOutEnd');
+                io.to(roomCode).emit('gameNotification', '⏱️ انتهى وقت المباراة!');
             }
         }, 1000);
     }
+
+    socket.on('makeMove', (data) => {
+        let room = rooms[data.room]; if (!room) return;
+        room.board[data.index] = data.symbol;
+        let nextSymbol = data.symbol === 'X' ? 'O' : 'X';
+        io.to(data.room).emit('moveMade', { index: data.index, symbol: data.symbol, nextTurnSymbol: nextSymbol });
+    });
+
+    // معالجة الانسحاب الفوري وحساب السكور حسب نوع الغرفة
+    socket.on('playerResigned', (data) => {
+        let room = rooms[data.room]; if (!room) return;
+        clearInterval(room.timer);
+        let loserId = socket.id;
+        let winnerId = room.players.find(id => id !== loserId);
+        
+        let loserUser = onlineUsers[loserId];
+        let winnerUser = onlineUsers[winnerId];
+
+        if (!room.isCustom) {
+            if (loserUser) {
+                loserUser.score = Math.max(0, loserUser.score - (loserUser.score <= 300 ? 5 : 15));
+                loserUser.rank = calculateRank(loserUser.score);
+                loserUser.history.unshift("خسارة"); if(loserUser.history.length > 5) loserUser.history.pop();
+                io.to(loserId).emit('updateProfile', loserUser);
+            }
+            if (winnerUser) {
+                winnerUser.score += (winnerUser.score <= 300 ? 25 : 10);
+                winnerUser.gold += 100;
+                winnerUser.rank = calculateRank(winnerUser.score);
+                winnerUser.history.unshift("فوز"); if(winnerUser.history.length > 5) winnerUser.history.pop();
+                io.to(winnerId).emit('updateProfile', winnerUser);
+            }
+        }
+        if (winnerId) {
+            io.to(winnerId).emit('opponentResignedResult', { message: "🎉 فزت بالمباراة بسبب انسحاب الخصم!" });
+        }
+        delete rooms[data.room];
+        sendGlobalUpdates();
+    });
+
+    socket.on('gameEndResult', (data) => {
+        let room = rooms[data.room]; let user = onlineUsers[socket.id];
+        if (!room || !user) return;
+        clearInterval(room.timer);
+        user.history.unshift(data.result); if (user.history.length > 5) user.history.pop();
+        if (!room.isCustom) {
+            if (data.result === 'فوز') { user.gold += 100; if (user.score <= 300) user.score += 25; else user.score += 10; }
+            else if (data.result === 'خسارة') { if (user.score <= 300) user.score = Math.max(0, user.score - 5); else user.score = Math.max(0, user.score - 15); }
+            user.rank = calculateRank(user.score);
+        }
+        socket.emit('updateProfile', user);
+        sendGlobalUpdates();
+    });
+
+    // نظام الأصدقاء والطلبات المعلقة والرفض والقبول
+    socket.on('sendFriendRequest', (targetUserId) => {
+        let sender = onlineUsers[socket.id];
+        let targetSocketId = Object.keys(onlineUsers).find(sid => onlineUsers[sid].userId === targetUserId);
+        if (!sender || !targetSocketId) return;
+        let receiver = onlineUsers[targetSocketId];
+        if ((receiver.friends || []).length >= 50) {
+            return socket.emit('notification', { type: 'error', message: '🚫 عذراً! هذا اللاعب وصل للحد الأقصى من الأصدقاء (50).' });
+        }
+        if (!receiver.friendRequests.some(r => r.userId === sender.userId)) {
+            receiver.friendRequests.push({ userId: sender.userId, name: sender.name, avatar: sender.avatar });
+            io.to(targetSocketId).emit('updateProfile', receiver);
+            socket.emit('notification', { type: 'success', message: '🚀 تم إرسال طلب الصداقة بنجاح!' });
+        }
+    });
+
+    socket.on('rejectFriendRequest', (targetUserId) => {
+        let me = onlineUsers[socket.id]; if (!me) return;
+        me.friendRequests = me.friendRequests.filter(r => r.userId !== targetUserId);
+        socket.emit('updateProfile', me);
+        let targetSocketId = Object.keys(onlineUsers).find(sid => onlineUsers[sid].userId === targetUserId);
+        if (targetSocketId) {
+            io.to(targetSocketId).emit('friendRequestRejectedNotification', { myUserId: me.userId });
+        }
+    });
+
+    socket.on('acceptFriend', (targetUserId) => {
+        let me = onlineUsers[socket.id]; let targetSocketId = Object.keys(onlineUsers).find(sid => onlineUsers[sid].userId === targetUserId);
+        if (!me || !targetSocketId) return; let friend = onlineUsers[targetSocketId];
+        if ((me.friends || []).length >= 50) return socket.emit('notification', { type: 'error', message: '🚫 لديك 50 صديقاً بالفعل!' });
+        me.friendRequests = me.friendRequests.filter(r => r.userId !== targetUserId);
+        if (!me.friends.some(f => f.userId === targetUserId)) me.friends.push({ userId: targetUserId, name: friend.name, avatar: friend.avatar });
+        if (!friend.friends.some(f => f.userId === me.userId) && (friend.friends || []).length < 50) friend.friends.push({ userId: me.userId, name: me.name, avatar: me.avatar });
+        socket.emit('updateProfile', me); io.to(targetSocketId).emit('updateProfile', friend);
+    });
+
+    socket.on('removeFriend', (targetUserId) => {
+        let me = onlineUsers[socket.id]; let targetSocketId = Object.keys(onlineUsers).find(sid => onlineUsers[sid].userId === targetUserId);
+        if (me) { me.friends = me.friends.filter(f => f.userId !== targetUserId); socket.emit('updateProfile', me); }
+        if (targetSocketId) { let friend = onlineUsers[targetSocketId]; friend.friends = friend.friends.filter(f => f.userId !== me.userId); io.to(targetSocketId).emit('updateProfile', friend); }
+    });
+
+    socket.on('sendChatMessage', (data) => { let user = onlineUsers[socket.id]; if (user) io.to(data.room).emit('receiveChatMessage', { sender: user.name, message: data.message }); });
+    socket.on('getPrivateMessages', (data) => { let chatKey = [data.myId, data.friendId].sort().join('_'); socket.emit('privateMessagesList', privateChats[chatKey] || []); });
+    socket.on('sendPrivateMessage', (data) => {
+        let chatKey = [data.myId, data.friendId].sort().join('_'); if (!privateChats[chatKey]) privateChats[chatKey] = [];
+        let msgObj = { senderName: data.senderName, message: data.message, time: new Date().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'}) };
+        privateChats[chatKey].push(msgObj);
+        let targetSocketId = Object.keys(onlineUsers).find(sid => onlineUsers[sid].userId === data.friendId);
+        socket.emit('privateMessagesList', privateChats[chatKey]); if (targetSocketId) io.to(targetSocketId).emit('privateMessagesList', privateChats[chatKey]);
+    });
+
+    socket.on('disconnect', () => { delete onlineUsers[socket.id]; sendGlobalUpdates(); });
 });
 
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-    console.log(`🚀 السيرفر المتطور جاهز بالكامل على البورت: ${PORT}`);
-});
+server.listen(3000, () => console.log(`🚀 السيرفر يعمل على بورت 3000`));
