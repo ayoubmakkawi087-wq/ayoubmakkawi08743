@@ -1,262 +1,303 @@
 const express = require('express');
 const app = express();
-const http = require('http');
-const server = http.createServer(app);
-const { Server } = require('socket.io');
-const io = new Server(server);
+const http = require('http').createServer(app);
+const io = require('socket.io')(http);
 
-app.use(express.static(__dirname));
+app.use(express.static('public'));
 
-let onlineUsers = {}; // socket.id -> userData
-let rooms = {};       // roomCode -> roomData
-let privateChats = {}; 
+const topics = {
+    "سيارات": ["تويوتا", "مرسيدس", "بي إم دبليو", "فورد", "فراري", "لكزس", "نيسان", "هيونداي", "كيا", "أودي", "بوش", "شيفورليه", "تسلا", "دوج", "جيب", "هوندا", "مازدا", "رينو"],
+    "ملابس": ["قميص", "فستان", "معطف", "بذلة", "حذاء", "وشاح", "بنطال", "تنورة", "قبعة", "سترة", "عباءة", "قماش", "جورب", "قفازات", "ربطة عنق"],
+    "أكل": ["بيتزا", "برجر", "كبسة", "شاورما", "باستا", "سوشي", "فلافل", "منسف", "كباب", "سمك", "دجاج", "ملوخية", "محشي", "أرز", "تاكو", "ستيك"],
+    "حيوانات": ["أسد", "فيل", "نمر", "غزال", "صقر", "حصان", "كلب", "قطة", "ثعلب", "ذئب", "دب", "زرافة", "قرد", "سنجاب", "أرنب", "تمساح", "ثعبان"],
+    "دول": ["الأردن", "السعودية", "مصر", "الإمارات", "الكويت", "قطر", "البحرين", "عمان", "العراق", "المغرب", "تونس", "فلسطين", "لبنان", "سوريا", "الأميركا"],
+    "فواكه": ["تفاح", "موز", "برتقال", "فراولة", "مانجو", "بطيخ", "عنب", "كيوي", "أناناس", "خوخ", "مشمش", "كرز", "رمان", "تين", "ليمون"]
+};
 
-function calculateRank(score) {
-    if (score <= 0) return "بدون رتبة";
-    let title = ""; let min = 0, max = 100;
-    if (score >= 1 && score <= 100) { title = "برونز"; min = 1; max = 100; }
-    else if (score <= 300) { title = "فضة"; min = 101; max = 300; }
-    else if (score <= 500) { title = "ذهب"; min = 301; max = 500; }
-    else if (score <= 700) { title = "بلاتين"; min = 501; max = 700; }
-    else if (score <= 1000) { title = "ألماس"; min = 701; max = 1000; }
-    else if (score <= 1500) { title = "هيرو"; min = 1001; max = 1500; }
-    else if (score <= 3000) { title = "قراند ماستر"; min = 1501; max = 3000; }
-    else { return "🏆 الأسطورة"; }
-    let range = (max - min + 1) / 3;
-    let currentOffset = score - min;
-    let subRank = 3 - Math.floor(currentOffset / range);
-    return `${title} ${Math.max(1, Math.min(3, subRank))}`;
-}
-
-setInterval(() => { privateChats = {}; }, 12 * 60 * 60 * 1000);
+let rooms = {};
 
 io.on('connection', (socket) => {
+    socket.emit('availableRooms', getPublicRooms());
 
-    socket.on('registerUser', (userData) => {
-        let userId = userData.userId || Math.floor(10000000 + Math.random() * 90000000).toString();
-        onlineUsers[socket.id] = {
-            id: socket.id, userId: userId, name: userData.name || "لاعب مجهول",
-            avatar: userData.avatar || '🥷', bio: userData.bio || 'جاهز للتحدي!',
-            gold: userData.gold ?? 1000, diamonds: userData.diamonds ?? 150,
-            score: userData.score ?? 10, friends: userData.friends || [],
-            friendRequests: userData.friendRequests || [], history: userData.history || [],
-            inventory: userData.inventory || [] // قائمة المشتريات بالخزنة
+    socket.on('createRoom', ({ username, roomName, password, maxPlayers, spiesCount, topic, gameDuration }) => {
+        let maxP = Math.min(Math.max(parseInt(maxPlayers) || 3, 3), 20);
+        let spies = Math.min(Math.max(parseInt(spiesCount) || 1, 1), 3);
+        let duration = parseInt(gameDuration) || 30; // القيمة الافتراضية 30 ثانية لتطابق طلبك
+
+        const roomId = 'room_' + Math.random().toString(36).substr(2, 9);
+        rooms[roomId] = {
+            id: roomId, name: roomName, password: password || null,
+            maxPlayers: maxP, spiesCount: spies, topic: topic, hostId: socket.id,
+            players: [{ id: socket.id, name: username, isAlive: true, role: '', word: '', votedFor: null, hasSpoken: false }],
+            gameStarted: false, currentTurnIndex: 0, timer: duration, baseDuration: duration, phase: 'setup', correctWord: ''
         };
-        onlineUsers[socket.id].rank = calculateRank(onlineUsers[socket.id].score);
-        socket.emit('updateProfile', onlineUsers[socket.id]);
-        sendGlobalUpdates();
+
+        socket.join(roomId);
+        socket.emit('roomJoined', rooms[roomId]);
+        io.emit('availableRooms', getPublicRooms());
     });
 
-    function sendGlobalUpdates() {
-        let usersArray = Object.values(onlineUsers);
-        io.emit('globalUserList', usersArray);
-        let top100 = [...usersArray].sort((a, b) => b.score - a.score).slice(0, 100);
-        io.emit('leaderboardUpdate', top100);
-    }
+    socket.on('joinRoom', ({ username, roomId, password }) => {
+        const room = rooms[roomId];
+        if (!room) return socket.emit('errorMsg', 'الغرفة غير موجودة');
+        if (room.gameStarted) return socket.emit('errorMsg', 'اللعبة بدأت بالفعل');
+        if (room.players.length >= room.maxPlayers) return socket.emit('errorMsg', 'الروم ممتلئ');
+        if (room.password && room.password !== password) return socket.emit('errorMsg', 'كلمة السر خطأ');
 
-    socket.on('searchUsers', () => { sendGlobalUpdates(); });
+        room.players.push({ id: socket.id, name: username, isAlive: true, role: '', word: '', votedFor: null, hasSpoken: false });
+        socket.join(roomId);
+        
+        socket.emit('roomJoined', room);
+        io.to(roomId).emit('roomUpdated', room);
+        io.emit('availableRooms', getPublicRooms());
+    });
 
-    // شراء باقات الألماس بواسطة الذهب
-    socket.on('buyDiamonds', (packType) => {
-        let user = onlineUsers[socket.id]; if (!user) return;
-        let cost = 0; let reward = 0;
-        if (packType === 100) { cost = 1500; reward = 100; }
-        else if (packType === 500) { cost = 8000; reward = 500; }
-        else if (packType === 1000) { cost = 17000; reward = 1000; }
+    socket.on('startRoomGame', (roomId) => {
+        const room = rooms[roomId];
+        if (!room || room.hostId !== socket.id || room.players.length < 3) return;
 
-        if (user.gold >= cost) {
-            user.gold -= cost; user.diamonds += reward;
-            socket.emit('updateProfile', user);
-            socket.emit('notification', { type: 'success', message: `🎉 تم شراء ${reward} ألماس بنجاح!` });
-            sendGlobalUpdates();
-        } else {
-            socket.emit('notification', { type: 'error', message: '⚠️ الذهب غير كافٍ لإتمام عملية الشراء!' });
+        room.gameStarted = true;
+        room.phase = 'talking';
+        const wordList = topics[room.topic];
+        const randomWord = wordList[Math.floor(Math.random() * wordList.length)];
+        room.correctWord = randomWord; // حفظ الكلمة الصحيحة للتحقق لاحقاً
+
+        let indices = [...Array(room.players.length).keys()];
+        let spyIndices = [];
+        for (let i = 0; i < room.spiesCount; i++) {
+            if (indices.length === 0) break;
+            spyIndices.push(indices.splice(Math.floor(Math.random() * indices.length), 1)[0]);
         }
-    });
 
-    // شراء عناصر المتجر (المظاهر والألوان) بواسطة الألماس
-    socket.on('buyShopItem', (item) => {
-        let user = onlineUsers[socket.id]; if (!user) return;
-        if (user.inventory.includes(item.id)) {
-            return socket.emit('notification', { type: 'error', message: '🚫 أنت تمتلك هذا العنصر بالفعل!' });
-        }
-        if (user.diamonds >= item.cost) {
-            user.diamonds -= item.cost;
-            user.inventory.push(item.id); // إضافة المعرف إلى الخزنة
-            socket.emit('updateProfile', user);
-            socket.emit('notification', { type: 'success', message: `🛍️ تم شراء [${item.name}] بنجاح ونقله إلى خزنتك!` });
-            sendGlobalUpdates();
-        } else {
-            socket.emit('notification', { type: 'error', message: '⚠️ الألماس لديك غير كافٍ لشراء هذا المظهر!' });
-        }
-    });
-
-    socket.on('joinCustomRoomDirect', (roomCode) => {
-        if (!rooms[roomCode]) {
-            rooms[roomCode] = { players: [], board: Array(9).fill(""), turn: 0, timer: null, timeLeft: 120, isCustom: true, customStyles: {} };
-        }
-        let room = rooms[roomCode];
-        if (room.players.length < 2 && !room.players.includes(socket.id)) {
-            room.players.push(socket.id); socket.join(roomCode);
-        }
-        if (room.players.length === 2) { startRoomTimer(roomCode); } 
-        else { socket.emit('waiting', `⏳ دخلت الروم المخصصة [${roomCode}]. بانتظار الخصم يدخل بنفس الكود...`); }
-    });
-
-    socket.on('inviteFriendToRoom', (data) => {
-        let sender = onlineUsers[socket.id]; if (!sender) return;
-        let targetSocketId = Object.keys(onlineUsers).find(sid => onlineUsers[sid].userId === data.friendUserId);
-        if (targetSocketId) {
-            io.to(targetSocketId).emit('roomInviteReceived', { roomCode: data.roomCode, hostName: sender.name, hostSocketId: socket.id });
-            socket.emit('notification', { type: 'success', message: '🚀 تم إرسال إشعار الدعوة لصديقك بنجاح!' });
-        }
-    });
-
-    socket.on('rejectRoomInvite', (data) => {
-        let hostSocket = io.sockets.sockets.get(data.hostSocketId);
-        if (hostSocket) hostSocket.emit('notification', { type: 'info', message: '❌ رفض صديقك طلب دعوة الانضمام للغرفة.' });
-    });
-
-    socket.on('acceptRoomInviteAndStart', (data) => {
-        let guestSocket = socket; let hostSocket = io.sockets.sockets.get(data.hostSocketId); let roomCode = data.roomCode;
-        if (!rooms[roomCode]) rooms[roomCode] = { players: [], board: Array(9).fill(""), turn: 0, timer: null, timeLeft: 120, isCustom: true, customStyles: {} };
-        if (!rooms[roomCode].players.includes(data.hostSocketId) && hostSocket) { rooms[roomCode].players.push(data.hostSocketId); hostSocket.join(roomCode); }
-        if (!rooms[roomCode].players.includes(guestSocket.id)) { rooms[roomCode].players.push(guestSocket.id); guestSocket.join(roomCode); }
-        startRoomTimer(roomCode);
-    });
-
-    socket.on('joinRandom', () => {
-        let availableRoom = Object.keys(rooms).find(code => rooms[code].players.length === 1 && !rooms[code].isCustom);
-        let roomCode = availableRoom || Math.floor(1000 + Math.random() * 9000).toString();
-        if (!rooms[roomCode]) rooms[roomCode] = { players: [], board: Array(9).fill(""), turn: 0, timer: null, timeLeft: 120, isCustom: false, customStyles: {} };
-        let room = rooms[roomCode]; room.players.push(socket.id); socket.join(roomCode);
-        if (room.players.length === 1) socket.emit('waiting', `⏳ بانتظار دخول الخصم في النمط التنافسي...`);
-        else if (room.players.length === 2) startRoomTimer(roomCode);
-    });
-
-    socket.on('cancelMatchmaking', () => {
-        Object.keys(rooms).forEach(roomCode => {
-            let room = rooms[roomCode];
-            if (!room.isCustom && room.players.includes(socket.id)) {
-                room.players = room.players.filter(id => id !== socket.id); socket.leave(roomCode);
-                if (room.players.length === 0) delete rooms[roomCode];
-            }
+        room.players.forEach((p, idx) => {
+            p.isAlive = true;
+            p.votedFor = null;
+            p.hasSpoken = false;
+            p.role = spyIndices.includes(idx) ? 'spy' : 'player';
+            p.word = p.role === 'spy' ? 'أنت برا السالفة! حاول تكتشف الكلمة' : randomWord;
         });
+
+        io.to(roomId).emit('gameStarted', room);
+        room.currentTurnIndex = 0;
+        startNextTurn(roomId);
     });
 
-    function startRoomTimer(roomCode) {
-        let room = rooms[roomCode]; if (!room) return;
-        clearInterval(room.timer); room.timeLeft = 120;
-        let p1 = onlineUsers[room.players[0]] || { name: "لاعب 1" }; let p2 = onlineUsers[room.players[1]] || { name: "لاعب 2" };
-        io.to(room.players[0]).emit('gameStart', { room: roomCode, symbol: 'X', opponent: p2, isCustom: room.isCustom });
-        io.to(room.players[1]).emit('gameStart', { room: roomCode, symbol: 'O', opponent: p1, isCustom: room.isCustom });
-
-        room.timer = setInterval(() => {
-            room.timeLeft--; io.to(roomCode).emit('timerUpdate', room.timeLeft);
-            if (room.timeLeft <= 0) { clearInterval(room.timer); io.to(roomCode).emit('gameNotification', '⏱️ انتهى وقت المباراة!'); }
-        }, 1000);
-    }
-
-    socket.on('makeMove', (data) => {
-        let room = rooms[data.room]; if (!room) return;
-        room.board[data.index] = data.symbol;
-        let nextSymbol = data.symbol === 'X' ? 'O' : 'X';
-        // تمرير الـ activeStyles الخاص باللاعب الذي لعب لتحديث الشكل والمظهر عند الخصم فوراً
-        io.to(data.room).emit('moveMade', { index: data.index, symbol: data.symbol, nextTurnSymbol: nextSymbol, styles: data.styles });
-    });
-
-    socket.on('syncBackgroundStyle', (data) => {
-        // لمزامنة مظهر الخلفية مع الخصم داخل الجيم
-        socket.to(data.room).emit('opponentBackgroundSynced', { bgStyle: data.bgStyle });
-    });
-
-    socket.on('playerResigned', (data) => {
-        let room = rooms[data.room]; if (!room) return;
-        clearInterval(room.timer);
-        let loserId = socket.id; let winnerId = room.players.find(id => id !== loserId);
-        let loserUser = onlineUsers[loserId]; let winnerUser = onlineUsers[winnerId];
-
-        if (!room.isCustom) {
-            if (loserUser) {
-                loserUser.score = Math.max(0, loserUser.score - (loserUser.score <= 300 ? 5 : 15));
-                loserUser.gold = Math.max(0, loserUser.gold - 5); loserUser.rank = calculateRank(loserUser.score);
-                loserUser.history.unshift("خسارة"); if(loserUser.history.length > 5) loserUser.history.pop();
-                io.to(loserId).emit('updateProfile', loserUser);
-            }
-            if (winnerUser) {
-                winnerUser.score += (winnerUser.score <= 300 ? 25 : 10); winnerUser.gold += 50; winnerUser.rank = calculateRank(winnerUser.score);
-                winnerUser.history.unshift("فوز"); if(winnerUser.history.length > 5) winnerUser.history.pop();
-                io.to(winnerId).emit('updateProfile', winnerUser);
-            }
-        }
-        if (winnerId) io.to(winnerId).emit('opponentResignedResult', { message: "🎉 فزت بالمباراة بسبب انسحاب الخصم!" });
-        delete rooms[data.room]; sendGlobalUpdates();
-    });
-
-    socket.on('gameEndResult', (data) => {
-        let room = rooms[data.room]; let user = onlineUsers[socket.id]; if (!room || !user) return;
-        clearInterval(room.timer);
-        user.history.unshift(data.result); if (user.history.length > 5) user.history.pop();
-        if (!room.isCustom) {
-            if (data.result === 'فوز') { user.gold += 50; if (user.score <= 300) user.score += 25; else user.score += 10; }
-            else if (data.result === 'خسارة') { user.gold = Math.max(0, user.gold - 5); if (user.score <= 300) user.score = Math.max(0, user.score - 5); else user.score = Math.max(0, user.score - 15); }
-            user.rank = calculateRank(user.score);
-        }
-        socket.emit('updateProfile', user); sendGlobalUpdates();
-    });
-
-    socket.on('sendFriendRequest', (targetUserId) => {
-        let sender = onlineUsers[socket.id]; let targetSocketId = Object.keys(onlineUsers).find(sid => onlineUsers[sid].userId === targetUserId);
-        if (!sender || !targetSocketId) return; let receiver = onlineUsers[targetSocketId];
-        if ((receiver.friends || []).length >= 50) return socket.emit('notification', { type: 'error', message: '🚫 عذراً! هذا اللاعب وصل للحد الأقصى من الأصدقاء (50).' });
-        if (!receiver.friendRequests.some(r => r.userId === sender.userId)) {
-            receiver.friendRequests.push({ userId: sender.userId, name: sender.name, avatar: sender.avatar });
-            io.to(targetSocketId).emit('updateProfile', receiver); socket.emit('notification', { type: 'success', message: '🚀 تم إرسال طلب الصداقة بنجاح!' });
+    socket.on('nextTurn', (roomId) => {
+        const room = rooms[roomId];
+        if (!room || !room.gameStarted || room.phase !== 'talking') return;
+        
+        if (room.players[room.currentTurnIndex].id === socket.id) {
+            room.players[room.currentTurnIndex].hasSpoken = true;
+            moveToNextPlayer(roomId);
         }
     });
 
-    socket.on('rejectFriendRequest', (targetUserId) => {
-        let me = onlineUsers[socket.id]; if (!me) return;
-        me.friendRequests = me.friendRequests.filter(r => r.userId !== targetUserId); socket.emit('updateProfile', me);
-        let targetSocketId = Object.keys(onlineUsers).find(sid => onlineUsers[sid].userId === targetUserId);
-        if (targetSocketId) io.to(targetSocketId).emit('friendRequestRejectedNotification', { myUserId: me.userId });
+    socket.on('sendChatMessage', ({ roomId, message }) => {
+        const room = rooms[roomId];
+        if (!room) return;
+        const player = room.players.find(p => p.id === socket.id);
+        io.to(roomId).emit('newChatMessage', { sender: player ? player.name : 'مشاهد', text: message });
     });
 
-    socket.on('acceptFriend', (targetUserId) => {
-        let me = onlineUsers[socket.id]; let targetSocketId = Object.keys(onlineUsers).find(sid => onlineUsers[sid].userId === targetUserId);
-        if (!me || !targetSocketId) return; let friend = onlineUsers[targetSocketId];
-        if ((me.friends || []).length >= 50) return socket.emit('notification', { type: 'error', message: '🚫 لديك 50 صديقاً بالفعل!' });
-        me.friendRequests = me.friendRequests.filter(r => r.userId !== targetUserId);
-        if (!me.friends.some(f => f.userId === targetUserId)) me.friends.push({ userId: targetUserId, name: friend.name, avatar: friend.avatar });
-        if (!friend.friends.some(f => f.userId === me.userId) && (friend.friends || []).length < 50) friend.friends.push({ userId: me.userId, name: me.name, avatar: me.avatar });
-        socket.emit('updateProfile', me); io.to(targetSocketId).emit('updateProfile', friend);
+    socket.on('castVote', ({ roomId, targetId }) => {
+        const room = rooms[roomId];
+        if (!room || room.phase !== 'voting') return;
+
+        const voter = room.players.find(p => p.id === socket.id);
+        if (!voter || !voter.isAlive || voter.id === targetId) return; // منع التصويت على النفس قطعياً
+
+        voter.votedFor = targetId;
+        io.to(roomId).emit('voteUpdated', room.players);
+
+        const alivePlayers = room.players.filter(p => p.isAlive);
+        const totalVotesCast = alivePlayers.filter(p => p.votedFor !== null).length;
+
+        if (totalVotesCast === alivePlayers.length) {
+            processVotingResult(roomId);
+        }
     });
 
-    socket.on('removeFriend', (targetUserId) => {
-        let me = onlineUsers[socket.id]; let targetSocketId = Object.keys(onlineUsers).find(sid => onlineUsers[sid].userId === targetUserId);
-        if (me) { me.friends = me.friends.filter(f => f.userId !== targetUserId); socket.emit('updateProfile', me); }
-        if (targetSocketId) { let friend = onlineUsers[targetSocketId]; friend.friends = friend.friends.filter(f => f.userId !== me.userId); io.to(targetSocketId).emit('updateProfile', friend); }
+    // معالجة تخمين برا السالفة (الـ 10 خيارات)
+    socket.on('submitSpyGuess', ({ roomId, guess }) => {
+        const room = rooms[roomId];
+        if (!room || room.phase !== 'spy_guessing') return;
+
+        if (guess === room.correctWord) {
+            io.to(roomId).emit('gameOver', { winner: 'spies', message: `🔥 عبقري! "برا السالفة" حزر الكلمة الصحيحة وهي [ ${room.correctWord} ] وفاز بالجيم بالكامل وكبّس على الطاولة! 😈` });
+        } else {
+            io.to(roomId).emit('gameOver', { winner: 'players', message: `🎉 كفو! "برا السالفة" خمن غلط واختار [ ${guess} ] بينما الكلمة الصح كانت [ ${room.correctWord} ]! الطاولة هي الفائزة والانتصار ساحق!` });
+        }
+        terminateRoom(roomId);
     });
 
-    socket.on('sendChatMessage', (data) => { let user = onlineUsers[socket.id]; if (user) io.to(data.room).emit('receiveChatMessage', { sender: user.name, message: data.message }); });
-    socket.on('getPrivateMessages', (data) => { let chatKey = [data.myId, data.friendId].sort().join('_'); socket.emit('privateMessagesList', privateChats[chatKey] || []); });
-    socket.on('sendPrivateMessage', (data) => {
-        let chatKey = [data.myId, data.friendId].sort().join('_'); if (!privateChats[chatKey]) privateChats[chatKey] = [];
-        let msgObj = { senderName: data.senderName, message: data.message, time: new Date().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'}) };
-        privateChats[chatKey].push(msgObj);
-        let targetSocketId = Object.keys(onlineUsers).find(sid => onlineUsers[sid].userId === data.friendId);
-        socket.emit('privateMessagesList', privateChats[chatKey]); if (targetSocketId) io.to(targetSocketId).emit('privateMessagesList', privateChats[chatKey]);
-    });
-
-    socket.on('disconnect', () => { 
-        Object.keys(rooms).forEach(roomCode => {
-            if (rooms[roomCode].players.includes(socket.id)) {
-                rooms[roomCode].players = rooms[roomCode].players.filter(id => id !== socket.id);
-                if (rooms[roomCode].players.length === 0) delete rooms[roomCode];
-            }
-        });
-        delete onlineUsers[socket.id]; sendGlobalUpdates(); 
+    socket.on('leaveRoom', (roomId) => { handleLeave(socket, roomId); });
+    socket.on('disconnect', () => {
+        for (const rId in rooms) {
+            if (rooms[rId].players.some(p => p.id === socket.id)) { handleLeave(socket, rId); break; }
+        }
     });
 });
 
-server.listen(3000, () => console.log(`🚀 السيرفر يعمل على بورت 3000`));
+function startNextTurn(roomId) {
+    const room = rooms[roomId];
+    if (!room || !room.gameStarted) return;
+
+    if (room.interval) { clearInterval(room.interval); room.interval = null; } // تصفير الموقت القديم تماماً لمنع العجقة
+
+    // ضبط الوقت حسب الطور الحالي: إذا كان تصويت يكون 30 ثانية، وإذا كلام يلتزم باختيار الغرفة
+    room.timer = (room.phase === 'voting') ? 30 : room.baseDuration;
+    
+    io.to(roomId).emit('turnUpdate', { currentTurnIndex: room.currentTurnIndex, activePlayerId: room.players[room.currentTurnIndex].id, phase: room.phase });
+    io.to(roomId).emit('timerTick', room.timer);
+
+    room.interval = setInterval(() => {
+        if (!rooms[roomId] || !rooms[roomId].gameStarted) { clearInterval(room.interval); return; }
+        rooms[roomId].timer--;
+        io.to(roomId).emit('timerTick', rooms[roomId].timer);
+
+        if (rooms[roomId].timer <= 0) {
+            clearInterval(room.interval);
+            if (rooms[roomId].phase === 'talking') {
+                rooms[roomId].players[rooms[roomId].currentTurnIndex].hasSpoken = true;
+                moveToNextPlayer(roomId);
+            } else if (rooms[roomId].phase === 'voting') {
+                processVotingResult(roomId);
+            }
+        }
+    }, 1000);
+}
+
+function moveToNextPlayer(roomId) {
+    const room = rooms[roomId];
+    if (!room) return;
+
+    let found = false;
+    for (let i = 0; i < room.players.length; i++) {
+        let idx = (room.currentTurnIndex + 1 + i) % room.players.length;
+        if (room.players[idx].isAlive && !room.players[idx].hasSpoken) {
+            room.currentTurnIndex = idx;
+            found = true;
+            break;
+        }
+    }
+
+    if (found) {
+        startNextTurn(roomId);
+    } else {
+        room.phase = 'voting';
+        startNextTurn(roomId);
+        io.to(roomId).emit('phaseChanged', { phase: 'voting' });
+    }
+}
+
+function processVotingResult(roomId) {
+    const room = rooms[roomId];
+    if (!room) return;
+    if (room.interval) clearInterval(room.interval);
+
+    let voteCounts = {};
+    room.players.forEach(p => { if(p.isAlive) voteCounts[p.id] = 0; });
+    room.players.forEach(p => {
+        if (p.isAlive && p.votedFor && voteCounts[p.votedFor] !== undefined) {
+            voteCounts[p.votedFor]++;
+        }
+    });
+
+    let maxVotes = -1, eliminatedId = null, tie = false;
+    for (const pId in voteCounts) {
+        if (voteCounts[pId] > maxVotes) {
+            maxVotes = voteCounts[pId]; eliminatedId = pId; tie = false;
+        } else if (voteCounts[pId] === maxVotes) {
+            tie = true;
+        }
+    }
+
+    let eliminatedPlayer = room.players.find(p => p.id === eliminatedId);
+    
+    if (eliminatedPlayer && !tie && maxVotes > 0) {
+        eliminatedPlayer.isAlive = false;
+        io.to(roomId).emit('playerEliminated', { id: eliminatedPlayer.id, name: eliminatedPlayer.name, role: eliminatedPlayer.role });
+
+        // القاعدة الذهبية الجديدة: إذا تم إقصاء "برا السالفة" نفتح له الـ 10 خيارات للتخمين فوراً واحتساب فوزه أو خسارته
+        if (eliminatedPlayer.role === 'spy') {
+            room.phase = 'spy_guessing';
+            
+            // توليد 10 خيارات عشوائية ممتازة ومضمونة تشمل الكلمة الصحيحة
+            let pool = [...topics[room.topic]];
+            pool = pool.filter(w => w !== room.correctWord);
+            // خلط عشوائي وأخذ 9 كلمات
+            pool.sort(() => 0.5 - Math.random());
+            let options = pool.slice(0, 9);
+            options.push(room.correctWord);
+            // إعادة خلط الـ 10 خيارات لكي لا تكون الكلمة الصحيحة في النهاية دائماً
+            options.sort(() => 0.5 - Math.random());
+
+            io.to(roomId).emit('spyMustGuess', {
+                spyId: eliminatedPlayer.id,
+                spyName: eliminatedPlayer.name,
+                options: options
+            });
+            return; // إيقاف الانتقال للجولة التالية لأن اللعبة تنتظر التخمين الآن
+        }
+    } else {
+        io.to(roomId).emit('playerEliminated', { id: null, name: 'لا أحد (تعادل بالأصوات أو انتهى الوقت بدون تصويت كامل)', role: '' });
+    }
+
+    // التحقق من استمرار الجيم في حال تم طرد لاعب عادي
+    const aliveSpies = room.players.filter(p => p.isAlive && p.role === 'spy').length;
+    const alivePlayers = room.players.filter(p => p.isAlive && p.role === 'player').length;
+
+    if (aliveSpies === 0) {
+        io.to(roomId).emit('gameOver', { winner: 'players', message: 'كفو! تم طرد جميع من هم برا السالفة بنجاح! 🎉' });
+        terminateRoom(roomId);
+    } else if (alivePlayers <= aliveSpies) {
+        io.to(roomId).emit('gameOver', { winner: 'spies', message: 'خسارة! نجح من هم برا السالفة في خداعكم والسيطرة والمساواة! 😈' });
+        terminateRoom(roomId);
+    } else {
+        // العودة لطور الكلام وجولة جديدة
+        room.phase = 'talking';
+        room.players.forEach(p => { p.votedFor = null; p.hasSpoken = false; });
+        room.currentTurnIndex = room.players.findIndex(p => p.isAlive);
+        startNextTurn(roomId);
+    }
+}
+
+function terminateRoom(roomId) {
+    if (rooms[roomId]) {
+        if (rooms[roomId].interval) clearInterval(rooms[roomId].interval);
+        delete rooms[roomId];
+        io.emit('availableRooms', getPublicRooms());
+    }
+}
+
+function getPublicRooms() {
+    return Object.values(rooms).map(r => ({ id: r.id, name: r.name, hasPassword: !!r.password, currentPlayers: r.players.length, maxPlayers: r.maxPlayers, gameStarted: r.gameStarted, topic: r.topic }));
+}
+
+function handleLeave(socket, roomId) {
+    const room = rooms[roomId];
+    if (!room) return;
+    room.players = room.players.filter(p => p.id !== socket.id);
+    socket.leave(roomId);
+    
+    if (room.players.length === 0 || room.hostId === socket.id) {
+        if (room.interval) clearInterval(room.interval);
+        io.to(roomId).emit('kickToLobby');
+        delete rooms[roomId];
+    } else {
+        io.to(roomId).emit('roomUpdated', room);
+    }
+    io.emit('availableRooms', getPublicRooms());
+}
+
+app.get('/robots.txt', (req, res) => {
+    res.type('text/plain');
+    res.send("User-agent: *\nAllow: /");
+});
+
+// التعديل الجديد للتوافق مع سيرفرات Render
+const PORT = process.env.PORT || 3000;
+
+http.listen(PORT, () => {
+    console.log(`السيرفر جاهز تماماً ويعمل على بورت: ${PORT}`);
+});
