@@ -5,6 +5,12 @@ const io = require('socket.io')(http);
 
 app.use(express.static('public'));
 
+app.get('/robots.txt', (req, res) => {
+    res.type('text/plain');
+    res.send("User-agent: *\nAllow: /");
+});
+
+
 const topics = {
     "سيارات": ["تويوتا", "مرسيدس", "بي إم دبليو", "فورد", "فراري", "لكزس", "نيسان", "هيونداي", "كيا", "أودي", "بوش", "شيفورليه", "تسلا", "دوج", "جيب", "هوندا", "مازدا", "رينو"],
     "ملابس": ["قميص", "فستان", "معطف", "بذلة", "حذاء", "وشاح", "بنطال", "تنورة", "قبعة", "سترة", "عباءة", "قماش", "جورب", "قفازات", "ربطة عنق"],
@@ -290,10 +296,7 @@ function handleLeave(socket, roomId) {
     io.emit('availableRooms', getPublicRooms());
 }
 
-app.get('/robots.txt', (req, res) => {
-    res.type('text/plain');
-    res.send("User-agent: *\nAllow: /");
-});
+
 
 // التعديل الجديد للتوافق مع سيرفرات Render
 const PORT = process.env.PORT || 3000;
